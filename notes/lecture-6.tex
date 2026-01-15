@@ -1,0 +1,144 @@
+\documentclass{article}
+
+\title{Lecture 6: Naive Bayes\&Support Vector Machines}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+\maketitle
+\section{Naive Bayes}
+Statistically, it's a bad idea to assume the zero probability of an unseen event.
+For example , one hasn't received an email with a word NeurIPS in it.
+Then
+\[
+ p(y=1|x)=\frac{p(x|y=1)p(y=1)}{p(x|y=1)p(y=1)+p(x|y=0)p(y=0)}=\frac{0}{0}
+\]
+Hence we introduce Laplacian smoothing:
+
+Think about the National Football Team has lost 4 games recently, and what about the probability to win?0?
+Sounds harsh,so we can add some numbers to both sides of a fraction:
+\[
+P(y=1)=\frac{\#``1'' + 1}{(\#``1'' + 1) + (\#``0'' + 1)}=\frac{1}{6}
+\]
+
+More generally:$x\in\{1,\cdots,k\}$
+Then estimate 
+\[
+p(x=j)=\frac{\sum_{i=1}^m \mathbf{1}\{x^{(i)}=j\}+1}{M+k}
+\]
+Similarly, we have(features are binary values,so we add 2 to the denominator)
+\[
+\phi_{j|y=0}=\frac{\sum_{i=1}^m \mathbf{1} \{x_j^{(i)}=1,y^{(i)}=0\} +1}{\sum_{i=1}^m \mathbf{1} \{y^{(i)}=0\}+2 }
+\]
+
+Assume that $x_i\in {1,\cdots,k}$, $x_i$ is multi-nomial .Notice that it needs to be discretized ,so we can put them into several buckets.
+
+Then we take the size of a house as an example,$\le 400$ feet is 1,$400-800$ feet is 2,and so on.
+\[
+p(x|y)=\prod_{j=1}^m p(x_j|y)
+\]
+\section{Event Model for Text Classification}
+Originally , we have a feature vector where each binary position represents whether a word appears in the text.Formally, it's called multi-variate Bernoulli event model.
+
+Now,we have a more compacted form : every word in a vocabulary has a unique ID ,so we can have a vector whose length is just as long as that of the text.
+Hence it's become multi-nomial.Formally, it's called multi-nomial Bernoulli event model
+
+\[
+P(x,y)=P(x|y)P(y)=\prod_{j=1}^n P(x_j|y) P(y)
+\]
+The following indicates the chance of word j being k if $y=0$,note that it has nothing to do with the position of a word.
+\[
+\phi_{k|y=0}=p(x_j=k|y=0)
+\]
+It also applies when $y=1$
+\[
+\phi_{k|y=1}=p(x_j=k|y=1)
+\] 
+Then we have the MLE:
+\[
+\phi_{k|y=0}=\frac{\sum_{i=1}^m \mathbf{1}\{y^{(i)}=0\}\sum_{j=1}^{n_i}\mathbf{1}\{x_j^{(i)}=k\}+1}{\sum_{i=1}^m \mathbf{1}\{y^{(i)}=0\}n_i+10,000}
+\]
+$n_i$ means the No. of the words of the i-th e-mail,the formula means the probability of the word k occurrence in all non-spam email.We add 10,000 to the denominator because there're 10000 possible outcomes.It can also be written as $P(x_j=k|y=0)$, $k \in \{1,\cdots,10000\}$
+
+The advantage of Naive Bayes:
+\begin{enumerate}
+\item[I] efficient \& equipped to implement\& quick
+\item[II] suitable for application not research
+\end{enumerate}
+One idea is too identity some mis-spelled words like $mor\&ga*e$
+Word embeddings can capture the similarity and semantics whthin words.(CS230)
+\section{SVM}
+Suppose that we have 2 variables $x_1,x_2$ and map them into a high dimentional feature $\phi(x)=[x_1,x_2,x_1^2,x_2^2,x_1x_2]^T$
+\begin{quote}
+\textbf{Note:} A "turnkey algorithm" is an algorithm designed for immediate, out-of-the-box use, requiring minimal configuration, data, or expert tuning to solve a specific problem. It doesn't have many parameters to fit with.
+\end{quote}
+\subsection{Optimal margin classifier(seperable case)}
+\subsubsection{Functional margin}
+how confidently and accurately do you model
+\[
+h_{\theta}(x)=g(\theta^Tx)
+\]
+Predict 1 if $\theta^T x\ge 0$ otherwise 0.
+
+If $y^{(i)}=1$, hope that $\theta^T x^{(i)}>>0$
+
+Functional margin of hyperplane definition:
+\[
+(w,b) w.r.t. (x^{(i)},y^{(i)})
+\]
+\[
+\hat{\gamma^{(i)}}=y^{(i)}(w^Tx^{(i)}+b)
+\]
+In a word, we hope that $\hat{\gamma^{(i)}}>>0$
+\begin{quote}
+\textbf{Note:} When $\hat{\gamma^{(i)}}>0$, $(x^{(i)},y^{(i)})$ is correctly classified,otherwise the classifier fails on this point. The larger $\hat{\gamma}^{(i)}$ is, the better the effect of the classifier is. So we want to find the minimum of $\hat{\gamma}^{(i)}$ to represent the lower-bound effect of a classifier w.r.t. a dataset.Among all possible classifier or hyperplane , $\hat{\gamma}$ should be as large as possible.
+\end{quote}
+Thus, it means $h(x^{(i)})=y^{(i)}$
+
+Functional margin w.r.t. training set:
+\[
+\hat{\gamma}=\min_i \hat{\gamma}^{(i)}
+\]
+This measures how well you are doing on a training set, since the larger the absolute value of $\hat{\gamma^{(i)}}$, the more valid it is.And the above definition means the worst sample in a training set.
+
+If we scale both w and b 10 times , it doesn't actually change the dicision boundary.
+Hence we can normalize the length of the parameters w:
+\[
+(w,b)->(\frac{w}{||w||},\frac{b}{||w||})
+\]
+Since we are supposed to normalize the w , hence the result can't cheat us because of scaling.
+
+\subsubsection{Geometric margin}
+Notation:
+\begin{enumerate}
+\item[I]  Labels $y\in\{-1,+1\}$
+\item[II] Have h output values in $\{-1,+1\}$
+\item[III] $g(z)=1 z\ge 0,-1,otherwise$
+\end{enumerate}
+Different from the previous $h_{\theta}(x)$,we will have
+\[
+h_{w,b}(x)=g(w^Tx+b)
+\]
+Conventionally ,in a vector $\Theta$, $\theta_0=b,\#(w)=n$
+ 
+Geometric margin of hyperplane (w,b) w.r.t $(x^{(i)},y^{(i)})$
+\[
+\gamma^{(i)}=\frac{y^{(i)}(w^Tx^{(i)}+b)}{||w||}
+\]
+And its relationship with the functional margin:
+\[
+\gamma^{(i)}=\frac{\hat{\gamma^{(i)}}}{||w||}
+\]
+Geometric margin w.r.t. training set:
+\[
+\gamma=\min_i \gamma^{(i)}
+\]
+
+Optimal margin classifier
+Choose w,b to maximize $\gamma$
+\[
+\min{\gamma,w,b,s.t. \frac{y^{(i)}(w^Tx^{(i)}+b)}{||w||}\ge \gamma}\gamma
+\]
+\subsection{Kernels}
+\subsection{Inseperable Case}
+\end{document}

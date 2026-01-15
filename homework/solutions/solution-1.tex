@@ -1,0 +1,392 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\title{Solution Set 1: Supervised Learning}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Linear Classifiers}
+\begin{enumerate}
+\item[(a)]
+\begin{eqnarray*}
+\nabla_{\theta_j} J(\theta) &=& 
+- \frac{1}{m} \sum_{i=1}^m
+\left(
+y^{(i)} \frac{1}{h_{\theta}(x^{(i)})}
+-
+(1 - y^{(i)}) \frac{1}{1 - h_{\theta}(x^{(i)})}
+\right)
+\frac{\partial h_{\theta}(x^{(i)})}{\partial \theta_j} \\
+&=& - \frac{1}{m} \sum_{i=1}^m
+\left(
+y^{(i)} \frac{1}{h_{\theta}(x^{(i)})}
+-
+(1 - y^{(i)}) \frac{1}{1 - h_{\theta}(x^{(i)})}
+\right)
+h_{\theta}(x^{(i)}) (1 - h_{\theta}(x^{(i)})) 
+\frac{\partial (\theta^T x^{(i)})}{\partial \theta_j} \\
+&=& - \frac{1}{m} \sum_{i=1}^m
+\left(
+y^{(i)} (1-h_{\theta}(x^{(i)}))
+-
+(1 - y^{(i)})  h_{\theta}(x^{(i)})
+\right)x_j^{(i)}\\
+&=& - \frac{1}{m}\sum_{i=1}^m \left(y^{(i)}-h_{\theta}(x^{(i)})\right)x_j^{(i)}
+\end{eqnarray*}
+\begin{eqnarray*}
+H_{jk} &=& \nabla_{\theta_j \theta_k}^2 J(\theta) \\
+       &=& \frac{\partial^2 J(\theta)}{\partial \theta_j \partial \theta_k}\\
+&=& - \frac{1}{m}\sum_{i=1}^m \left( h_{\theta}(x^{(i)})(h_{\theta}(x^{(i)})-1)\right) x_j^{(i)}\frac{\partial \theta^T x^{(i)}}{\partial \theta_k}\\
+&=&  - \frac{1}{m}\sum_{i=1}^m \left( h_{\theta}(x^{(i)})(h_{\theta}(x^{(i)})-1)\right) x_j^{(i)}x_k^{(i)}\\
+&=& \frac{1}{m}\sum_{i=1}^m h_{\theta}(x^{(i)})(1-h_{\theta}(x^{(i)})) x_j^{(i)}x_k^{(i)}
+\end{eqnarray*}
+
+This can be written in a matrix form $X^TDX$($D=h\prime_{\theta}^{(i)}(x)I$ is diagonal and every element is definitely non-negative)
+
+Thus $z^THz=z^TX^TDXz=(Xz)^TD(Xz)=\frac{1}{m}\sum_{i=1}^m h_{\theta}(x^{(i)})(1-h_{\theta}(x^{(i)}))(Xz)^T(Xz)=\frac{1}{m}\sum_{i=1}^m h_{\theta}(x^{(i)})(1-h_{\theta}(x^{(i)}))||Xz||_2\ge 0$
+\item[(b)]
+\begin{eqnarray*}
+p(y=1|x;\phi,\mu_0,\mu_1,\Sigma)\\
+&=&
+\frac{p(x|y=1)p(y=1)}{p(x|y=1)p(y=1)+p(x|y=0)p(y=0)}\\
+&=&
+\frac{1}{1+\frac{p(x|y=0)p(y=0)}{p(x|y=1)p(y=1)}}\\
+&=&
+\frac{1}{1+exp\left(-\frac{1}{2} ((x^T\Sigma^{-1}x-2x^T\Sigma^{-1}\mu_0+\mu_0^T\Sigma^{-1}\mu_0)-(x^T\Sigma^{-1}x-2x^T\Sigma^{-1}\mu_1+\mu_1^T\Sigma^{-1}\mu_1))-\log\frac{\phi}{1-\phi}\right)}\\
+&=&
+\frac{1}{1+exp\left(-\frac{1}{2} ((2x^T\Sigma^{-1}(\mu_1-\mu_0)+\mu_0^T\Sigma^{-1}\mu_0-\mu_1^T\Sigma^{-1}\mu_1))-\log\frac{\phi}{1-\phi}\right)}\\
+&=&
+\frac{1}{1+exp\left(-\frac{1}{2} ((2(\mu_1-\mu_0)^T\Sigma^{-1}x+\mu_0^T\Sigma^{-1}\mu_0-\mu_1^T\Sigma^{-1}\mu_1))-\log\frac{\phi}{1-\phi}\right)}
+\end{eqnarray*}
+Thus ,let $\theta=\Sigma^{-1}(\mu_1-\mu_0)$ and $\theta_0=\frac{1}{2}(\mu_0^T\Sigma^{-1}\mu_0-\mu_1^T\Sigma^{-1}\mu_1)+\log\frac{\phi}{1-\phi}$
+Then we have the given form .Q.E.D
+\item[(c)]
+\begin{eqnarray*}
+\mathcal{l}(\phi,\mu_0,\mu_1,\Sigma)\\
+&=&
+\sum_{i=1}^m \log p(x^{(i)}|y^{(i)};\mu_0,\mu_1,\Sigma)+\log p(y^{(i)};\phi)+\log p(y^{(i)};\phi)\\
+&=&
+\sum_{i=1}^m -\log{(2\pi)^{n\over 2}|\Sigma|^{1\over2}}-\frac{1}{2}(x^{(i)}-\mu_{y^{(i)}})^T\Sigma^{-1}(x^{(i)}-\mu_{y^{(i)}})+\log p(y^{(i)};\phi)\\
+&=&
+\sum_{i=1}^m -{n\over 2}\log (2\pi)-{1\over2}\log |\Sigma|-\frac{1}{2}({x^{(i)}}^T\Sigma^{-1}x^{(i)}-{x^{(i)}}^T\Sigma^{-1}\mu_{y^{(i)}}\\
+&-&{\mu_{y^{(i)}}}^T\Sigma^{-1}x^{(i)}+{\mu_{y^{(i)}}}^T\Sigma^{-1}\mu_{y^{(i)}})+\log p(y^{(i)};\phi)
+\end{eqnarray*}
+Then take the derivative of $\phi$:
+
+\begin{eqnarray*}
+0\\
+&=&
+\sum_{i=1}^m \frac{1}{\phi} 1\{y^{i}=1\} - \frac{1}{1-\phi} (1 - 1\{y^{i}=1\})\\
+&=&
+\frac{1}{\phi} \sum_{i=1}^m 1\{y^{i}=1\} - \frac{1}{1-\phi} (m-\sum_{i=1}^m 1\{y^{i}=1\})
+\end{eqnarray*}
+Thus we got $\hat{\theta}=\frac{1}{m}\sum_{i=1}^m 1\{y^{i}=1\}$
+
+Then take the derivative of $\mu_0$:
+
+\begin{eqnarray*}
+0\\
+&=&
+\sum_{i=1}^m -\frac{1}{2} \left(1\{y^{(i)}=0\}(-2{x^{(i)}}^T\Sigma^{-1}+2\Sigma^{-1}\mu_{y^{(i)}})\right)\\
+&=&
+\sum_{i=1}^m 1\{y^{(i)}=0\}\left({x^{(i)}}^T\Sigma^{-1}-\Sigma^{-1}\mu_0\right)\\
+&=&
+\sum_{i=1}^m 1\{y^{(i)}=0\}\Sigma^{-1}x^{(i)}-\sum_{i=1}^m 1\{y^{(i)}=0\} \Sigma^{-1}\mu_0
+\end{eqnarray*}
+
+Thus we got $\hat{\mu_0}=\frac{\sum_{i=1}^m 1\{y^{(i)}=0\}{x^{(i)}}^T}{\sum_{i=1}^m 1\{y^{(i)}=0\}}$
+
+Similarly,we can get  $\hat{\mu_1}=\frac{\sum_{i=1}^m 1\{y^{(i)}=0\}{x^{(i)}}^T}{\sum_{i=1}^m 1\{y^{(i)}=1\}}$
+
+Then take the derivative of $\Sigma$:
+\begin{eqnarray*}
+0\\
+&=&
+\sum_{i=1}^m -\frac{1}{2} \Sigma^{-1}-\frac{1}{2}\left(-\Sigma^{-1}(x^{(i)}{x^{(i)}}^T-2x^{(i)}{\mu_{y^{(i)}}}^T+\mu_{y^{(i)}}{\mu_{y^{(i)}}}^T)\Sigma^{-1}\right)\\
+&=&
+-\sum_{i=1}^m (1-\left(x^{(i)}-\mu_{y^{(i)}}\right)\left(x^{(i)}-\mu_{y^{(i)}}\right)^T\Sigma^{-1})\\
+&=&
+-\frac{1}{2} \Sigma^{-1} \left(m\Sigma-\sum_{i=1}^m \left(x^{(i)}-\mu_{y^{(i)}}\right)\left(x^{(i)}-\mu_{y^{(i)}}\right)^T\right)\Sigma^{-1}
+\end{eqnarray*}
+
+Thus we got $\hat{\Sigma}=\frac{1}{m} \sum_{i=1}^m \left(x^{(i)}-\mu_{y^{(i)}}\right)\left(x^{(i)}-\mu_{y^{(i)}}\right)^T$
+\item[(f)]
+\begin{figure}[h]
+    \centering
+    % --- Row 1 ---
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/gda_dataset_1.png}
+        \caption{GDA I}
+        \label{fig:gda1}
+    \end{subfigure}
+    \hfill
+	\begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/logreg_dataset_1.png}
+        \caption{LogReg I}
+        \label{fig:logreg1}
+    \end{subfigure}
+    
+
+    % --- Row 2 ---
+    \vskip 0.5cm
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/gda_dataset_2.png}
+        \caption{GDA II}
+        \label{fig:gda2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/logreg_dataset_2.png}
+        \caption{LogReg II}
+        \label{fig:logreg2}
+    \end{subfigure}
+
+    \caption{Decision boundaries of GDA and Logistic Regression}
+    \label{fig:all_decision_boundaries}
+\end{figure}
+
+\item[(g)]
+
+On Dataset 1, GDA performs worse than logisitc regression.Because there're many deviated points according to the contour of Dataset 1,so it doesn't simulate the Gaussian distrbution very well. And approach of the logistic regression generalizes better. 
+\end{enumerate}
+
+\section{Stochastic Gradient Descent}
+\begin{enumerate}
+\item[(a)]
+\begin{eqnarray*}
+p(y^{(i)}=1 \mid x^{(i)}) 
+&=& \frac{p(x^{(i)} \mid y^{(i)}=1)\, p(y^{(i)}=1)}
+         {p(x^{(i)} \mid y^{(i)}=1)\, p(y^{(i)}=1) + p(x^{(i)} \mid y^{(i)}=0)\, p(y^{(i)}=0)}
+\end{eqnarray*}
+
+Due to $p(t^{(i)}=1 \mid y^{(i)}=1)=1$, we can get the following equation:
+
+\begin{eqnarray*}
+p(y^{(i)}=1 \mid x^{(i)}) 
+&=& \frac{ p(x^{(i)} \mid t^{(i)}=1) \, p(t^{(i)}=1) }
+         { p(x^{(i)} \mid y^{(i)}=1) \, p(y^{(i)}=1)
+           + p(x^{(i)} \mid y^{(i)}=0) \, p(y^{(i)}=0) } \\
+&=& p(t^{(i)}=1 \mid x^{(i)}) \,
+    \frac{ p(x^{(i)} \mid t^{(i)}=1) \, p(t^{(i)}=1)
+         + p(x^{(i)} \mid t^{(i)}=0) \, p(t^{(i)}=0) }
+         { p(x^{(i)} \mid y^{(i)}=1) \, p(y^{(i)}=1)
+           + p(x^{(i)} \mid y^{(i)}=0) \, p(y^{(i)}=0) }\\
+&=&
+p(t^{(i)}=1 \mid x^{(i)}) \alpha
+\end{eqnarray*}
+So the equation $p(t^{(i)}=1 \mid x^{(i)})=\frac{p(y^{(i)}=1 \mid x^{(i)}) }{\alpha}$ holds.
+\item[(b)]
+\begin{eqnarray*}
+h(x^{(i)})=p(y^{(i)}=1|x^{(i)})=p(t^{(i)}=1|x^{(i)})\alpha=\alpha
+\end{eqnarray*}
+\end{enumerate}
+
+\section{Poisson Regression}
+\begin{enumerate}
+\item[(a)]
+\begin{eqnarray*}
+p(y;\lambda) &=& \frac{e^{-\lambda} e^{y \log \lambda}}{e^{\sum_{i=1}^{y} \log i}} \\
+             &=& e^{-\lambda + y \log \lambda - \sum_{i=1}^{y} \log i}\\
+&=& \frac{1}{y!} e^{\log \lambda y-\lambda} 
+\end{eqnarray*}
+Accordingly, we know that $b(y)=\frac{1}{y!}$,$\eta=\log \lambda$,$a(\eta)=-\lambda=-e^{\log\lambda}=-e^{\eta}$
+$T(y)=y$
+\item[(b)]
+It's $h(\eta)=e^{\eta}$
+\item[(c)]
+Use the response canonical function ,then we get:
+\begin{eqnarray*}
+p(y|x;\theta)\\
+&=& \frac{e^{-h_{\theta}(x)}{h_{\theta}(x)}^y}{y!}
+\end{eqnarray*}
+\begin{eqnarray*}
+L(\theta)\\
+&=& p(y|X;\theta)\\
+&=& \prod_{i=1}^n p(y^{(i)}|x^{(i)};\theta)\\
+&=& \prod_{i=1}^n \frac{e^{-h_{\theta}(x^{(i)})}{h_{\theta}(x^{(i)})}^{y^{(i)}}}{{y^{(i)}}!}
+\end{eqnarray*}
+Then it's easier to get the maximum log likelihood:
+\begin{eqnarray*}
+\mathcal{l}(\theta)\\
+&=& \log L(\theta)\\
+&=& \sum_{i=1}^n {\left(-h_{\theta}(x^{(i)})+y^{(i)}\log{h_{\theta}(x^{(i)})}-\sum_{i=1}^{y^{(i)}} i!\right)}
+\end{eqnarray*}
+Then we take the derivatives of the log likelihood:
+\begin{eqnarray*}
+\frac{\partial}{\partial \theta_j} \mathcal{l}(\theta)\\
+&=& 
+\frac{\partial}{\partial \theta_j} \sum_{i=1}^n {\left(-e^{\theta^Tx^{(i)}}+y^{(i)}\theta^T x^{(i)}-\sum_{i=1}^{y^{(i)}} i!\right)}\\
+&=&
+\sum_{i=1}^n \left(-x_j^{(i)}e^{\theta^T x^{(i)}}+y^{(i)}x_j^{(i)}\right)\\
+&=&
+\sum_{i=1}^n \left((y^{(i)}-e^{\theta^Tx^{(i)}})x_j^{(i)}\right)\\
+&=&
+(y-e^{\theta^T x})x_j\\
+&=&
+(y-h_{\theta}(x))x_j
+\end{eqnarray*}
+Eventually, we get the stochastic gradient descent function:
+$\theta_j:=\theta_j+\alpha (y-h_{\theta}(x))x_j$
+\end{enumerate}
+\section{Convexity of Generalized Linear Models}
+\begin{enumerate}
+\item[(a)]
+\begin{eqnarray*}
+\frac{\partial }{\partial \eta}\int y p(y;\eta)dy\\
+&=&\int \frac{\partial}{\partial \eta}y p(y;\eta)dy
+\end{eqnarray*}
+\begin{eqnarray*}
+\int p(y;\eta)dy\\
+&=&\int b(y)e^{\eta y-a(\eta)}dy\\
+&=&e^{-a}\int b(y)e^{\eta y} dy\\
+=1
+\end{eqnarray*}
+Then we get $a=\log \int b(y)e^{\eta y}dy$
+Then take the derivative of log-partition:
+\begin{eqnarray*}
+\frac{\partial a}{\partial \eta}\\
+&=& \frac{1}{\int b(y)e^{\eta y}dy} \int y\frac{\partial }{\partial \eta} e^{\eta y} dy\\
+&=& \frac{1}{\int b(y)e^{\eta y}dy}  \int yb(y) e^{\eta y} dy\\
+&=&\mathcal{E}[Y|X;\theta]
+\end{eqnarray*}
+\item[(b)] 
+\begin{eqnarray*}
+\frac{\partial^2a}{\partial\eta^2}\\ 
+&=& \frac 
+{\left( \int (\frac{\partial}{\partial \eta}yb(y)e^{\eta y}dy){\int b(y)e^{\eta y}dy}-({\int yb(y) e^{\eta y} dy)({\int \frac{\partial}{\partial \eta} b(y)e^{\eta y}dy})} \right)} 
+{{\left(\int b(y)e^{\eta y}dy\right)}^2}\\
+&=& \frac 
+{\left( \int (y^2b(y)e^{\eta y}dy){\int b(y)e^{\eta y}dy}-({\int yb(y) e^{\eta y} dy)({\int y b(y)e^{\eta y}dy})} \right)} 
+{{\left(\int b(y)e^{\eta y}dy\right)}^2}\\
+&=&
+\frac{\int (y^2b(y)e^{\eta y}dy)}{\int (b(y)e^{\eta y}dy)}-{\left(\frac{\int (yb(y)e^{\eta y}dy)}{\int (b(y)e^{\eta y}dy)}\right)}^2\\
+&=&
+\mathcal{E}[Y^2]-{\mathcal{E}[Y]}^2\\
+&=&
+Var(Y|X;\theta)
+\end{eqnarray*}
+\item[(c)]
+\begin{eqnarray*}
+NLL\\
+&=&
+-\sum_{i=1}^n \log p(y;\eta)\\
+&=& - \sum_{i=1}^n \log b(y) +(\eta^T T(y)-a(\eta))
+\end{eqnarray*}
+1-st derivative of the NLL w.r.t. $\theta_j$
+\begin{eqnarray*}
+\sum_{i=1}^n {(a\prime(x^T \theta)-T(y^{(i)}))}x_j^{(i)}
+\end{eqnarray*}
+Futhermore ,the 2-nd derivative of the NLL w.r.t. $ \theta_k$(i.e. $(j,k)$ element of the Hessian matrix $H$):
+\begin{eqnarray*}
+H_{jk}\\
+&=& \sum_{i=1}^n {(a\prime(x^T \theta)-T(y^{(i)}))}x_j^{(i)}\\
+&=&
+\sum_{i=1}^n {(a^{(2)}({x^{(i)}}^T \theta))}x_j^{(i)}x_k^{(i)}\\
+&=&
+ \sum_{i=1}^n E[X^{(i)}|Y^{(i)};\theta] x_j^{(i)}x_k^{(i)}
+\end{eqnarray*}
+Thus $H=X^T \mathrm{diag}(E[X^{(1)}|Y^{(1)};\theta],\cdot,E[X^{(n)}|Y^{(n)};\theta]) X$
+\end{enumerate}
+Obviously, all entries of $D$ is non-negative since they are variance according to (b),thus H is PSD
+\section{Locally weighted linear regression}
+\begin{enumerate}
+\item[(a)]
+ \begin{enumerate}
+\item[i.]
+\begin{eqnarray*}
+J(\theta) 
+&=& \frac{1}{2} \sum_{i=1}^n w^{(i)} \big(\theta^T x^{(i)} - y^{(i)} \big)^2 \\
+&=& \sum_{i=1}^n \big({x^{(i)}}^T\theta  - y^{(i)} \big)\frac{1}{2} w^{(i)} \big({x^{(i)}}^T\theta  - y^{(i)} \big)\\
+&=& (X\theta-Y)^TW(X\theta-Y)
+\end{eqnarray*}
+note that $W_{ii}=\frac{1}{2}w^{(i)}$
+\item[ii.]
+\begin{eqnarray*}
+\nabla_{\theta}J(\theta)\\
+&=& \nabla_{\theta} (X\theta-Y)^TW(X\theta-Y)\\
+&=& \nabla_{\theta} ((X\theta)^TWX\theta-(X\theta)^TWy-y^TW(X\theta)+y^TWy)\\
+&=& \nabla_{\theta}((X\theta)^TWX\theta-(X\theta)^TWy-y^TW(X\theta))\\
+&=& \nabla_{\theta}(\theta^TX^TWX\theta-2(X^TW^Ty)^T\theta)\\
+&=& 2X^TWX\theta-2X^TW^Ty
+\end{eqnarray*}
+Then , we have $\theta=(X^T(WX))^{-1}(WX)^{T}y$
+\item[iii.]
+\begin{eqnarray*}
+\log \prod_{i=1}^m p(y^{(i)}|x^{(i)};\theta)\\
+&=&\sum_{i=1}^m -\log {\sqrt{2\pi}\sigma^{(i)}}-\frac{(y^{(i)}-\theta^Tx^{(i)})^2}{2(\sigma^{(i)})^2}
+\end{eqnarray*}
+This is equivalent to minimize $\frac{1}{2}\sum_{i=1}^m \frac{1}{(\sigma^{(i)})^2}(\theta^Tx^{(i)-y^{(i)}})^2$  
+\end{enumerate}
+Let $w^{(i)}=\frac{1}{(\sigma^{(i)})^2}$ ,then get the MLE turns into solving a weighted linear regression problem.
+\item[(b)]
+The model is under-fitting because $\tau$ is too large.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/05-b-lwr.png}
+    \caption{Locally weighted regression w/ $\tau=0.5$(underfitting)}
+    \label{fig:decision_boundary}
+\end{figure}
+\item[(c)]
+$\tau=0.05$ is the best when $MSE=0.449$
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/5_valid_lwr_0.03.png}
+        \caption{$\tau$ = 0.03}
+        \label{fig:tau1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/5_valid_lwr_0.05.png}
+        \caption{$\tau$= 0.05}
+        \label{fig:tau2}
+    \end{subfigure}
+
+    \vspace{0.5cm} 
+
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/5_valid_lwr_0.1.png}
+        \caption{$\tau$ = 0.1}
+        \label{fig:tau3}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/5_valid_lwr_0.5.png}
+        \caption{$\tau$ = 0.5}
+        \label{fig:tau4}
+    \end{subfigure}
+
+    \vspace{0.5cm}
+
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/5_valid_lwr_1.0.png}
+        \caption{$\tau$ = 1.0}
+        \label{fig:tau5}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/5_valid_lwr_10.0.png}
+        \caption{$\tau$ = 10.0}
+        \label{fig:tau6}
+    \end{subfigure}
+
+    \caption{Locally Weighted Regression results with different bandwidth parameters $\tau$. As $\tau$ increases, the model transitions from overfitting to underfitting.}
+    \label{fig:lwr_grid_comparison}
+\end{figure}
+\end{enumerate}
+
+\end{document}

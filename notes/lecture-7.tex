@@ -1,0 +1,112 @@
+\documentclass{article}
+
+\title{Lecture 7: Kernels}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Recap}
+
+\[
+\max_{w,b} \frac{1}{\|w\|} 
+\]
+
+This is equivalent to:
+\[
+\min_{w,b} \frac{1}{2}\|w\|^2 (s.t. y^{(i)}(w^{(i)}x+b) \ge 1)
+\]
+\begin{quote}
+\textbf{Q:} Why do we use functional margin not geometric one since the latter can normalize the condition?
+
+\textbf{A:} Because if it were the geometric one, there will be $w$ in the denominator ,which makes it not a convex optimization problem
+
+\textbf{Q:} Why is the lower bound is a random 1?
+
+\textbf{A:} It's convex optimization ,so the answer will always be deterministic. If it's zero ,$w$ can be extremely shrinked hence the gap can be extremely enlarged. If it's a random positive number $c$, then the answer would be $\frac{\|w\|}{c}$(the distance between 2 hyperplanes determined by $||w||$ is$\frac{2c}{\|w\|}$).So, choosing 1 is a convenient convention. 
+\end{quote}
+Let $x^{(i)}\in R^{100}$
+
+Suppose $w=\sum_{i=1}^m \alpha_i y^{(i)}x^{(i)}$(According to the represented theorem, w can be formulated as this and don't lose any performance)
+
+Intuition of the formula above(w is a linear combination of the dataset):
+\begin{enumerate}
+\item[I] Logisitc regression (Stochastic Gradient Descent)$\Theta=\Theta-\alpha (h_{\theta}(x^{(i)})-y^{(i)})x^{(i)}$(It also applies to Batch GD)
+\item[II] vector $w$ is always orthogonal to the decision boundary of the same training data,$w$ pins the direction of the decision boundary while $b$ can move this around;$w$ is in the span of the vector spaces expressed by the dataset.
+\end{enumerate}
+When we substitute $w$ with $w=\sum_{i=1}^m \alpha_i y^{(i)}x^{(i)}$, then we will get
+\begin{eqnarray*}
+\frac{1}{2}{\|w\|}^2\\
+&=&\frac{1}{2}w^T w\\
+&=&\frac{1}{2}\sum_{i=1}^m \alpha_i y^{(i)}x^{(i)}\\
+&=&\frac{1}{2}\sum_i \sum_j \alpha_i\alpha_j y^{(i)} y^{(j)}{x^{(i)}}^Tx^{(j)}\\
+&=&\frac{1}{2}\sum_i \sum_j \alpha_i\alpha_j y^{(i)} y^{(j)} <x^{(i)},x^{(j)}>
+\end{eqnarray*}
+And the subjective will be
+\begin{eqnarray*}
+y^{(i)}(\sum_j \alpha_j y^{(j)}<x^{(j)},x^{(i)}>+b)\ge 1
+\end{eqnarray*}
+\section{The Dual Optimization Problem}
+\section{Kernel Trick}
+\subsection{Definition}
+\begin{enumerate}
+\item[(a)] write algorithm in terms of $<x^{(i)},x^{(j)}>$
+\item[(b)] let there be mapping from x to $\phi(x)$ in which $\phi(x)=[x_1,x_2,x_1^2,x_2^2,x_1x_2,\cdots]$
+\item[(c)] find way to compute $K(x,z)=\phi(x)^T\phi(z)$
+\item[(d)] replace $<x,z>$ with $K(x,z)$
+\end{enumerate}
+Let $\phi(x)=[x_1x_1,x_1x_2,x_1x_3,x_2x_1,x_2x_2,x_2x_3,x_3x_1,x_3x_2,x_3x_3]$
+similiarly ,
+\[
+\phi(z)=[z_1z_1,z_1z_2,z_1z_3,z_2z_1,z_2z_2,z_2z_3,z_3z_1,z_3z_2,z_3z_3]
+\]
+
+Because there are $n^2$ elements in $K(x,z)$ ,it needs $O(n^2)$ time to compute $\phi(x)$ on $\phi(x)^T\phi(z)$ explicitly
+
+Then we get$K(x,z)=\phi(x)^T\phi(z)={(x^Tz)}^2$,then it tunrs into $O(N)$ time complexity.
+
+Another example ,$K(x,z)=(x^Tz+c)^2$
+
+Then we add 3 terms $\sqrt{2c}x_1,\sqrt{2c}x_2,\sqrt{2c}x_3$ to $\phi(x)$ and  $\sqrt{2c}z_1,\sqrt{2c}z_2,\sqrt{2c}z_3$ to $\phi(z)$
+
+So, we have a conclusion $\phi(x)$ has all $(n+d,n)$(roughly $(n+d)^d$) features of monomial up to order d.
+\subsection{How to make kernels}
+If x ,z are similar,$K(x,z)=\phi(x)^T\phi(x)$ is large;otherwise,it's small.
+
+Then there's a function to better measure this semantics:
+\[
+K(x,z)=e^{-\frac{{\|x-z\|}^2}{2\sigma^2}}
+\]
+Does there exist $\phi$ s.t.$K(x,z)=\phi(x)^T\phi(x)$?
+
+Let $\{x^{(1)}, \cdots, x^{(n)}\}$ be $n$ points.  
+Let $K \in R^{n * n}$ be the kernel matrix, with entries  
+\[
+K_{ij} = K(x^{(i)}, x^{(j)}).
+\]
+
+Given any vector $z$,  
+\[
+z^T K z = \sum_i \sum_j z_i K_{ij} z_j = \sum_i \sum_j z_i (\phi(x^{(i)}))_k (\phi(x^{(j)}))_k z_j.
+\]
+The K is semi-definite.
+The kernel mentioned before is Guassian kernel.$\phi(x)\in R^{\infty}$
+since
+\[
+\phi(x)=e^{-\frac{x^2}{2\sigma^2}}[1,\frac{x}{\sigma},\frac{x^2}{\sigma^2\sqrt{2!}},\frac{x^3}{\sigma^3\sqrt{3!}},\cdots]
+\] 
+and
+\[
+\phi(z)=e^{-\frac{z^2}{2\sigma^2}}[1,\frac{z}{\sigma},\frac{z^2}{\sigma^2\sqrt{2!}},\frac{z^3}{\sigma^3\sqrt{3!}},\cdots]
+\] 
+\subsection{Mercer Theorem}
+K is a valid kernel function (i.e. $\exists \phi s.t. K(x,z)=\phi(x)^T\phi(z)$)only if for any d points $\{x^{(1)},\cdots,x^{(n)}\}$,the corresponding kernel matrix $K\ge0$
+\subsection{N1 Norm soft margin SVM}
+\begin{eqnarray*}
+\min \frac{1}{2} {\|w\|}^2+c\sum_{i=1}^m \xi_i(s.t. y^{(i)}(w^Tx^{(i)}+b)\ge -\xi_i)
+\end{eqnarray*}
+\begin{quote}
+\textbf{Notes:} This tolerates the hyperplane to project a little wrong.which makes it much more robust.
+\end{quote}
+\end{document}
