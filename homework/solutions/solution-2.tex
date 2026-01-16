@@ -1,0 +1,149 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{fancyhdr} 
+\usepackage[margin=1in]{geometry}
+
+% --- minimal fix for fancyhdr warning ---
+\setlength{\headheight}{14pt}  % 增加页眉高度，避免 fancyhdr 警告
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{CS229 Solution Set \#2}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\title{Solution Set 2: Supervised Learning II}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{plain}
+
+\section{Logistic Regression: Training stability}
+
+\begin{itemize}
+    \item[(a)] training on the dataset B doesn't converge in a long time.
+    \item[(b)] Because dataset B is linearly separable and so the result theoretically will be infinity.
+    
+    \textbf{Proof:} Since B is linearly separable $y^{(i)}(\theta^{T}x^{(i)}+b)>0$ always holds. To make the functional margin large (the result more confident), $\theta^{T}$ needs to scale up infinitely, and the probability becomes extremely near 0, thus the gradient also becomes even smaller, so the training process becomes even slower.
+    
+    A is not linearly separable, so there will be some points where $y^{(i)} = y^{(i)}(\theta^{T}x^{(i)}+b)<0$, the functional margin will be negative, so we can quickly find the optimal margin without worrying about the vanishing gradient.
+    
+    \begin{itemize}
+        \item[i] \textbf{No.} Since the functional margin won't reach the global minimum at a finite value (non-convex optimization), using a different constant learning rate won't help much. Note that $||w||$ will become larger as the training goes, which means we should be careful even if learning rate is fast enough that $||w||$ will be exploded. But if you take a small rate, the process will be even slower.
+        
+        \item[ii] \textbf{Yes.} This is an adaptive approach. As the gradient descent iterates, the learning rate $\frac{1}{t^{2}}$ becomes extremely smaller. When it decreases to the same order of $10^{-15}$ it will stop at some iteration.
+        
+        \item[iii] \textbf{No.} Linear scaling won't change the contour and thus it's still linearly separable.
+        
+        \item[iv] \textbf{Yes.} Adding a regularization term definitely makes the objective a convex function w.r.t. $\theta$, it will definitely reach the global minimum at a finite value.
+        
+        \item[v] \textbf{Likely yes.} It's likely that the training data may be linearly inseparable.
+    \end{itemize}
+
+    \item[(c)] \textbf{No.} Because SVM w/ the hinge loss $J(\theta)=\max\{0,1-z\}$ is more robust. It only cares about the data adjacent to the border/margin, and even if the training data is linearly separable, since $z$ for all of the data will soon become greater than 1 ($z$ is functional margin so it can scale), thus $J(\theta)$ becomes zero and comes to convergence.
+\end{itemize}
+
+\newpage
+
+\section{Model Calibration}
+
+\begin{itemize}
+    \item[(a)] The loss function $J(\theta)$ for logistic regression:
+    \[ J(\theta)=-\frac{1}{m}\sum_{i=1}^{m}[y^{(i)}\log(h_{\theta}(x^{(i)}))+(1-y^{(i)})\log(1-h_{\theta}(x^{(i)}))] \]
+    
+    Take the derivative:
+    \[ \frac{\partial J(\theta)}{\partial\theta_{j}}=\frac{1}{m}\sum_{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)})x_{j}^{(i)} \]
+    
+    Assume that the bias $\theta_{0}=\alpha$, and since $x_{0}^{(i)}=1$ for all $i=1,\dots,m$:
+    \[ \frac{\partial J(\theta)}{\partial\theta_{0}}=\frac{1}{m}\sum_{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)}) \]
+    
+    Then we get the equation when set the partial derivative to 0:
+    \[ \frac{1}{m}\sum_{i=1}^{m}h_{\theta}(x^{(i)})=\frac{1}{m}\sum_{i=1}^{m}y^{(i)} \]
+    
+    This can also be written as:
+    \[ \frac{1}{|I_{0,1}|}\sum_{i\in I_{0,1}}P(y=1|x;\theta)=\frac{1}{|I_{0,1}|}\sum_{i\in I_{0,1}}I(y^{(i)}=1) \]
+    Q.E.D.
+
+    \item[(b)] \textbf{No.} Because the calibration only guarantees the equation above. That means when there are 50\% data whose $y$ is 1, and all of the predicted values are 0.5. It does calibrate well for any $(a,b)\subset[0,1]$ where $a\le0.5\le b$. But this model fails completely on the dataset.
+    
+    \textbf{No.} Because when it comes to prediction, any value greater than 0.5 means positive. Think about all of the predicted value is 0.6 and it has an 100\% accuracy, it doesn't calibrate well since $0.6\ne1$.
+
+    \item[(c)] The loss function w/ L2 regularization is:
+    \[ J(\theta)=-\frac{1}{m}\sum_{i=1}^{m}[y^{(i)}\log(h_{\theta}(x^{(i)}))+(1-y^{(i)})\log(1-h_{\theta}(x^{(i)}))]+\frac{\lambda}{2m}||\theta||^{2} \]
+    
+    Take the derivative w.r.t. $\theta_{0}$:
+    \[ \frac{\partial J(\theta)}{\partial\theta_{0}}=\frac{1}{m}\sum_{i=1}^{m}(h_{\theta}(x^{(i)})-y^{(i)})+\frac{\lambda}{m}\alpha \]
+    
+    And obviously it doesn't calibrate well:
+    \[ \frac{1}{m}\sum_{i=1}^{m}(h_{\theta}(x^{(i)})+\lambda\alpha)=\frac{1}{m}\sum_{i=1}^{m}y^{(i)} \]
+\end{itemize}
+\newpage
+
+\section{Bayesian Interpretation of Regularization}
+\begin{itemize}
+ \item[(a)] 
+\begin{eqnarray*}
+\theta_{MAP}\\
+&=&\arg \max_{\theta} p(\theta|x,y)\\
+&=& \arg \max_{\theta}\frac{p(y|x,\theta)p(\theta|x)}{p(y|x)}\\
+&=& \arg \max_{\theta}p(y|x,\theta)p(\theta|x)\\
+&=&\arg \max_{\theta}p(y|x,\theta)p(\theta)
+\end{eqnarray*}
+\item[(b)]
+plug $p(\theta)=\frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{\theta^2}{2\sigma^2}}$ into the above formula,we will get
+\begin{eqnarray*}
+\theta_{MAP}\\
+&=&\arg \max_{\theta}p(y|x,\theta)\frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{\theta^T\theta}{2\sigma^2}}\\
+&=&\arg \max_{\theta}\log p(y|x,\theta)-\frac{1}{2}\log{2\pi\sigma^2}-\frac{\theta^T\theta}{2\sigma^2}\\
+&=&\arg \min_{\theta}-\log p(y|x,\theta)+\frac{\theta^T\theta}{2\sigma^2}\\
+&=&\arg \min_{\theta}-\log p(y|x,\theta)+{\left(\frac{1}{\sqrt{2}\sigma}\right)}^2{\|\theta\|}_2^2
+\end{eqnarray*}
+Let $\lambda={\left(\frac{1}{\sqrt{2}\sigma}\right)}^2$,we will get the final formula ,Q.E.D.
+\item[(c)]
+Since $\epsilon\sim \mathbf{N}(0,\sigma^2)$ and $y=\theta^Tx+\epsilon$,then we have
+\begin{eqnarray*}
+y|x,\theta \sim \mathbf{N}(\theta^Tx,\sigma^2)
+\end{eqnarray*}
+Then  plug it into the $\theta_{MAP}$ formula,we will get
+\begin{eqnarray*}
+\theta_{MAP}\\
+&=&\arg \min_{\theta}-\sum_{i=1}^m\log p(y^{(i)}|x^{(i)},\theta)+{\left(\frac{1}{\sqrt{2}\eta}\right)}^2{\|\theta\|}_2^2\\
+&=&\arg \min_{\theta}\sum_{i=1}^m\left(\frac{1}{2}\log {\left(2\pi\sigma^2\right)}+\frac{(y-x^T\theta)^2}{2\sigma^2}\right)+{\left(\frac{1}{\sqrt{2}\eta}\right)}^2{\|\theta\|}_2^2\\
+&=&\arg \min_{\theta}\sum_{i=1}^m\left(\frac{(y-x^T\theta)^2}{2\sigma^2}\right)+{\left(\frac{1}{\sqrt{2}\eta}\right)}^2{\|\theta\|}_2^2\\
+&=&\arg \min_{\theta}\sum_{i=1}^m(y-x^T\theta)^2+{\left(\frac{\sigma}{\eta}\right)}^2{\|\theta\|}_2^2\\
+&=&\arg \min_{\theta} (y-X^T\theta)^T(y-X^T\theta)+{\left(\frac{\sigma}{\eta}\right)}^2\theta^T\theta\\
+&=&\arg \min_{\theta} y^Ty-2\theta^TXy+\theta^TXX^T\theta+{\left(\frac{\sigma}{\eta}\right)}^2\theta^T\theta\\
+&=&\arg \min_{\theta} -2\theta^TXy+\theta^TXX^T\theta+{\left(\frac{\sigma}{\eta}\right)}^2\theta^T\theta\\
+&=&\arg \min_{\theta} \theta^T(-2Xy+XX^T\theta+{\left(\frac{\sigma}{\eta}\right)}^2\theta)
+\end{eqnarray*}
+Take the derivative of it,then we get:
+\begin{eqnarray*}
+-2Xy+2XX^T\theta+2{\left(\frac{\sigma}{\eta}\right)}^2\theta
+\end{eqnarray*}
+Then it reduces:
+\begin{eqnarray*}
+Xy=(XX^T+{\left(\frac{\sigma}{\eta}\right)}^2I)\theta
+\end{eqnarray*}
+Finally we get
+\begin{eqnarray*}
+\theta_{MAP}={\left(XX^T+{\left(\frac{\sigma}{\eta}\right)}^2I\right)}^{-1}(Xy)
+\end{eqnarray*}
+\item[(d)]
+\begin{eqnarray*}
+\theta_{MAP}\\
+&=&\arg \max_{\theta} p(y|x,\theta)p(\theta|x)\\
+&=&\arg \max_{\theta} p(y|x,\theta)\frac{1}{2b}e^{-\frac{\|\theta\|}{b}}\\
+&=&\arg \max_{\theta} \log p(y|x,\theta)-\log{2b}-\frac{\|\theta\|}{b}\\
+&=&\arg \min_{\theta} \sum_{i=1}^m\left(\frac{1}{2}\log {\left(2\pi\sigma^2\right)}+\frac{(y-x^T\theta)^2}{2\sigma^2}\right)+\frac{\|\theta\|}{b}\\
+&=&\arg \min_{\theta} \sum_{i=1}^m\left(\frac{(y-x^T\theta)^2}{2\sigma^2}\right)+\frac{\|\theta\|}{b}\\
+&=&\arg \min_{\theta} {\|y-X^T\theta\|}^2+\frac{2\sigma^2}{b} {\|\theta\|_1}
+\end{eqnarray*}
+Let $\gamma$ be $\frac{2\sigma^2}{b}$Q.E.D.
+\end{itemize}
+
+\end{document}

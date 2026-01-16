@@ -1,0 +1,158 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{Lecture 9 Approx/Estimiation Error\& ERM}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+\maketitle
+\section{Setup\&Assumptions}
+\begin{enumerate}
+\item[1.] D is a distribution,$(x,y) \sim D$,train and test data simluate the same distribution.
+\item[2.] Independent samples
+\item[3.] Learning Algorithm[Estimator] is deterministic.,$S$ and $\hat{\theta}$ are random variables.
+\end{enumerate}
+\section{Bias\&Variance}
+From a parameter view,i.e. a$\theta_1,\theta_2$ plot.We can easily see the variance and bias of $\Theta$ against the real sampled distribution.
+The more bias it has, more it will sway from the center;
+The more variance it is, the more disperse the data points are.
+
+As $m->0$,$Var[\hat{\theta}]->0$,It's statistical efficiency.
+
+If $\hat{\theta}->\theta^{*}$,$m->0$ ,it's consistent.(the random variable converges to a constant)
+
+$E[\hat{\theta}]=\theta^{*}$ for all $m$. But if it doesn't hold ,it tends to has a high bias.
+
+\section{Approx Estimiation}
+How to address variance?
+\begin{enumerate}
+\item[(i)] $m->\infty$
+\item[(ii)] Ruglarization(even bias introduced,the variance goes down)
+\end{enumerate}
+Let's look at the space of hypothesis.
+\begin{quote}
+\textbf{Class of Hypothesis:} is the set of all functions (models) that a learning algorithm is allowed to choose from during training.
+
+Each hypothesis is a linear function parameterized by $\theta$:
+\[
+h_\theta(x) = \operatorname{sign}(\theta^\top x)
+\]
+
+The hypothesis class is the collection of all such functions:
+\[
+\mathcal{H} = \{\, h_\theta \mid \theta \in \mathbb{R}^d ,\}
+\]
+
+This means learning consists of selecting the best $h_\theta$ from $\mathcal{H}$.
+
+\end{quote}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/9-space-of-hypothesis.png}
+    \caption{Space of Hypothesis}
+    \label{fig:space_of_hypothesis}
+\end{figure}
+Then define some notations:
+\begin{enumerate}
+\item[(i)] g- best possible hypothesis
+\item[(ii)]$ h^{*}$ best in class $\mathbf{H}$
+\item[(iii)] $\hat{h}$-learnt from finite data
+ \item[(iv)] $\epsilon(h)$-risk/generalization error=$E_{(x,y)\sim \mathbf{D}} [\mathbf{1}\{h(x)\ne y\}]$
+\item[(v)] $\hat{\epsilon}_s(h)$-empirical risk =$\frac{1}{m} \sum_{i=1}^m \mathbf{1}\{h(x^{(i)})\ne y^{(i)}\}$
+\item[(vi)] $\epsilon(g)$=Bayes Error/Irreducible error(suppose that the data itself isn't deterministic)
+\item[(vii)] $\epsilon(h^{*})-\epsilon(g)$= Approximation error./class
+\item[(viii)] $\epsilon(\hat{h})-\epsilon(h^{*})$=Estimation Error. /data
+\item[(ix)] $\epsilon(\hat{h})$=Estimation+Approx+Irreducible Error
+\end{enumerate}
+Note that the estimation error can be decomposed into bias(along with approximation error) and variance.    
+
+How to fight high bias?
+\begin{enumerate}
+\item[(i)] make $\mathbf{H}$ bigger(scale down the regularization item). By adding regularization item,you are effectively shrinking the space of hypothesis.
+\end{enumerate}
+\begin{quote}
+\textbf{Q:} What if we shrink towards $h^{*}$?
+
+\textbf{A:} That's impossible,if we knew it, we wouldn't need to learn it.
+
+\textbf{Q:} When we add regularization ,are we sure that the bias is going up?
+
+\textbf{A:} You are going to reduce the variance for sure(which makes $\mathbf{H}$shrinking and moving away from $g$),but it's very likely that the bias goes up.
+
+\textbf{Q}: Why does regularization shrink the hypothesis space?
+
+\textbf{A:} 
+Regularization limits the parameter norm, which restricts the set of allowed hypotheses. 
+For example, L2 regularization $\|\theta\|_2 \le C$ confines $\theta$ to a finite ball:
+\[
+\mathcal{H}_{\text{reg}} = \{\, h_\theta \mid \|\theta\|_2 \le C \,\} \subset \mathcal{H}.
+\]
+
+\textbf{Q} : Why is the optimal solution on the boundary?
+
+\textbf{A:} 
+For a loss that decreases monotonically with $\|\theta\|$, the optimizer pushes $\theta$ as large as allowed. 
+With the constraint $\|\theta\| \le C$, the optimum lies on the boundary:
+\[
+\|\theta^\star\|_2 = C.
+\]
+
+\end{quote}
+\section{Empirical Risk Minimizer}
+\begin{eqnarray*}
+\hat{h_{ERM}}=\arg \min_{h\in\mathbf{H}}\frac{1}{m} \sum_{i=1}^m \mathbf{1}\{h(x^{(i)})\ne y^{(i)}\}
+\end{eqnarray*}
+\section{Uniform Convergence}
+\begin{enumerate}
+\item[I] $\hat{\epsilon}(h)$ vs $\epsilon(h)$
+\item[II] $\epsilon(\hat\epsilon)$ vs $\epsilon(h^{*})$
+\end{enumerate}
+Two prerequistes:
+\begin{enumerate}
+\item[I] Union bound: $\Pr\Bigg(\bigcup_{i=1}^{n} A_i\Bigg) \le \sum_{i=1}^{n} \Pr(A_i)$
+\item[II] Hoeffding Inequality when $X_i\sim Bernoulli(p)$,the margin $r>0$:$P(\|\hat\phi-\phi|\ge r)\le 2 e^{-2n r^2}$
+\end{enumerate}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/9-uniform-convergence.png}
+    \caption{Generalization error $\epsilon(h)$ and empirical error$\hat{\epsilon}_s(h)$}
+    \label{fig:uniform_convergence}
+\end{figure}
+For the above graph,$E[\hat{\epsilon(h_i)}]=\epsilon(h_i)$ holds.
+Apply hoeffding inequality,then we have
+\begin{eqnarray*}
+Pr[\|\hat{\epsilon}(h_i)-\epsilon(h_i)\|>\gamma]\le 2e^{-2\gamma^2m}
+\end{eqnarray*}
+It's intuitive that bigger the $m$ gets,the the more tight the error between two classes are .
+\subsection{Finite Hypothesis Class $\mathbf{H}$}
+Suppose that there are finite $\kappa=\|\mathbf{H}\|$ hypothesis class.
+\begin{eqnarray*}
+Pr[\exists h\in \mathbf{H}\|\hat{\epsilon}_s(h)-\epsilon(h)\|\ge \gamma]\le \kappa 2 e^{-2\gamma^2m}
+\end{eqnarray*}
+Intuitively, if $\kappa$ keeps growing,the model will be less reliable.
+Equivalently, we have
+\begin{eqnarray*}
+Pr[\forall h \in \mathbf{H}, \quad |\hat{\epsilon}_s(h) - \epsilon(h)| \le \gamma]
+\ge 1- \kappa 2 e^{-2\gamma^2m}
+\end{eqnarray*}
+let $\delta=\alpha \kappa e^{-2\gamma^2m}$ be the probability of error.
+
+If we fix $r,\delta>0$, $m\ge \frac{1}{2\gamma^2}\log \frac{\alpha\kappa}{\delta}$
+
+\begin{eqnarray*}
+\epsilon(\hat{h}) 
+&=& \epsilon(\hat{h}) - \hat{\epsilon}_s(\hat{h}) + \hat{\epsilon}_s(\hat{h}) \\
+&\le& \hat{\epsilon}_s(\hat{h}) + \gamma \quad (\text{uniform convergence}) \\
+&\le& \hat{\epsilon}_s(h^*) + \gamma \quad (\hat{h} \text{ minimizes training error}) \\
+&\le& \epsilon(h^*) + 2 \gamma \quad (\text{uniform convergence for } h^*) 
+\end{eqnarray*}
+
+
+If we plug the $\gamma$ according to Hoeffding inequality,then we get
+$\epsilon(\hat{h})\le \epsilon(h^{*})+2\sqrt{\frac{1}{2m}+\log \frac{\alpha\kappa}{\delta}}$
+\section{VC Dimension}
+$\epsilon(\hat{h})\le \epsilon(h^{*})+O\left(\frac{VC(\mathbf{H})}{m} \log [\frac{m}{VC(\mathbf{H})}+\frac{1}{m}\log \frac{1}{\delta}]\right)$
+\end{document}

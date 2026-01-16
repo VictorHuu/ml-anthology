@@ -1,0 +1,102 @@
+\documentclass{article}
+
+\title{Lecture 8 Data Splits,Models\& Cross-Validation}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+\maketitle
+\section{Bias/Variance}
+\section{Regularization}
+\[
+\min \frac{1}{2} \sum_{i=1}^m {\|y^{(i)}-\theta^Tx^{(i)}\|}^2+\frac{\lambda}{2}{\|\theta\|}^2
+\]
+The latter term is called regularization.
+Inuitively, when $\lambda$ is larger ,the model becomes less overfitting and more under-fitting(High Bias).
+If we want to maximize the objective ,we need to minus the regularization term.
+\begin{quote}
+\textbf{Q:}Why doesn't SVM overfitting like crazy?
+
+\textbf{A:}It turns out that optimization of objective is to maximize the marigin of SVM.
+
+\textbf{Q:} Do we have to regularize per-element of the parameters?
+
+\textbf{A:} Not really. In a text classifiction example: logistic regression w/ regularization tends to outperform the Naive Bayes.
+If you do not use regularization ,the No. of examples is at least the order of the parameters that you want to fit.
+Ok back to the original question: why don't we adopt $\sum_j \lambda_j \theta_j^2$ ? Because choosing n $\lambda_j$ is too costly.
+
+\textbf{Q:} Why don't SVM machines suffer too badly?
+
+\textbf{A:} Minimize the penalty $W$ . All of the class of functions seperate the data with a large marigin ,that class has low complexity formalized by VC dimension.Since it has low VC dimension ,it's quick simple and it's quick unlikely that they over-fit.So ,it's convenient that SVM has low No. of SVs.
+\end{quote}
+\begin{quote}
+\textbf{VC Dimension:}If you can find a set of $n$ points, so that it can be shattered by the classifier (i.e. classify all possible $2n$
+ labeling correctly) and you cannot find any set of $n+1$ points that can be shattered (i.e. for any set of $n+1$
+ points there is at least one labeling order so that the classifier can not separate all points correctly), then the VC dimension is $n$.
+\end{quote}
+\section{Map Estimation}
+Given a training set $S=\{x^{(i)},y^{(i)}\}$, $P(\theta|S)=\frac{P(S|\theta)P(\theta)}{P(S)}$,
+
+$\arg \max_{\theta}P(\theta|S)=\arg \max_{\theta} P(S|\theta)P(\theta)=\arg\max_{\theta}\left(\prod_{i=1}^m P(y^{(i)},x^{(i)},\theta)\right)P(\theta)$
+
+Assume that $\theta \sim \mathbf{N}(0,\tau^2I)$
+
+There are 2 schools of statistics: Frequentist vs. Bayesian.The former develops MLE while the former develops MAP(Maximum A Posteriori)
+They are equivalent.
+\section{Data Splits}
+\subsection{hold out cross validation}
+10,000 examples:
+e.g. $\theta_0+\theta_1x$ or $\theta_0+\theta_1x+\theta_2x^2$
+or choose value $\tau,\lambda,C$
+\begin{enumerate}
+\item[(a)]train each model (option for degree of polynomial) on $S_{train}$,get some hypothesis $h_i$
+\item[(b)]Measure error on $S_{dev}$ model with lowest error on $S_{dev}$
+\item[(c)] Evaluate the algorithm on $S_{test}$ as test and report the error.
+\end{enumerate}
+What if we measure errors on $S_{train}$, it over-fit.
+
+Historically, 7/3 or 6/2/2 splits is a rule of thumb if you don't have much datasets.
+If you have a giant dataset, the percentage of test/dev you set is shrinking. But still ,test and dev datasets needs to be large enough to see the difference of perfs among algs.
+\subsection{k fold cross validation}
+dev set a.k.a. cross validation set
+
+don't make any decision on test data set ,instead use it to track your team's performance.
+
+For a small dataset, it's improper to train on only partial data.
+We should round-robin,that is, for a k-fold dataset,for k rounds each, train on $k-1$ pieces and test on the remaining piece,and then average the error.
+Outside the loop ,we can try several choices of degree of polynomials.
+Notice that the final optional step is to re-fit on all the data.
+\begin{quote}
+\textbf{Q:} Why do we need train/dev/test datasets?They're redundant!
+\textbf{A:}In ridge regression, we need to choose both the model parameters w and the regularization parameter lambda in order to balance bias and variance.
+\begin{enumerate}
+\item[(a)]If we use only the training data to both train the model and select $\lambda$, then $\lambda$ will be chosen to minimize the training error. Since the training error typically decreases as the model becomes more complex, this approach tends to select a very small $\lambda$ and leads to overfitting.
+
+\item[(b)]On the other hand, if we estimate w for each $\lambda$ using the training set and directly evaluate performance on the test set in order to choose $\lambda$, then the test set is implicitly used for model selection. This causes the test error to be a biased estimate of the true generalization error. The issue is not that the test set is insufficiently representative.
+
+\item[(c)]Therefore, a better approach is to split the dataset into training, validation (dev), and test sets. The training set is used to estimate $w$ for a given $\lambda$, the validation set is used to select the best $\lambda$, and the test set is used only once to evaluate the final model’s generalization performance.
+\end{enumerate}
+\end{quote}
+\subsection{Leave out one validation}
+If the dataset is even small,we can use leave-out-one validation.
+As the name implies, in every round,we should pick one item out and train another 19 entries.
+\begin{quote}
+\textbf{Q:} Suppose that in a 10-fold CV ,there are 10 estimates,can we measure the variance on those 10 estimates?
+
+\textbf{A:} It turns out that these 10 estimates are correlated because the training data among them are heavily overlapped.(Futhermore,refer to Michael Kearns)
+
+\textbf{Q:} Are we going to use k-fold CV in deep learning?
+
+\textbf{A:} It depends mainly on the scale of the dataset.
+
+\textbf{Q\&A:} In k-fold CV, using F1-score is quite complicated.
+
+\textbf{Q:} How do we sample the dataset in k-fold CV?
+\textbf{A:} Usually it's randomly shuffled.If the training set and test set simulate different distribution, we should adopt other methods.
+\end{quote}
+\section{Feature Selection(Iterative Feature Selection,not PCA)}
+You may suspect that many features are useless.
+
+Try adding one feature i to $\mathbf{F}$ and see which single-feature affects most to improve the performance,then add it to the $\mathbf{F}$
+It's an iterative approach.
+\end{document}

@@ -104,9 +104,19 @@ and
 K is a valid kernel function (i.e. $\exists \phi s.t. K(x,z)=\phi(x)^T\phi(z)$)only if for any d points $\{x^{(1)},\cdots,x^{(n)}\}$,the corresponding kernel matrix $K\ge0$
 \subsection{N1 Norm soft margin SVM}
 \begin{eqnarray*}
-\min \frac{1}{2} {\|w\|}^2+c\sum_{i=1}^m \xi_i(s.t. y^{(i)}(w^Tx^{(i)}+b)\ge -\xi_i)
+\min \frac{1}{2} {\|w\|}^2+c\sum_{i=1}^m \xi_i(s.t. y^{(i)}(w^Tx^{(i)}+b)\ge -\xi_i)(s.t. \xi_i\ge 0)
 \end{eqnarray*}
 \begin{quote}
 \textbf{Notes:} This tolerates the hyperplane to project a little wrong.which makes it much more robust.
+Another significance is that this introduces the hinge loss:
+
+we can get the formula for $\xi_i$:
+\[
+loss_{hinge}(z)=\max(0,1-z)
+\]
+ ,where $z=y^{(i)}(w^Tx^{(i)}+b)$
+Hinge loss is more robust then 0-1 loss since the latter is non-convex and is NP-hard to solve.
+
+
 \end{quote}
 \end{document}
