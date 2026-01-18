@@ -1,9 +1,12 @@
+from sqlite3 import Row
 import collections
 
 import numpy as np
 
 import util
 import svm
+
+from collections import Counter
 
 
 def get_words(message):
@@ -21,6 +24,9 @@ def get_words(message):
     """
 
     # *** START CODE HERE ***
+    split_message = message.split(" ")
+    normalized_words = [word.lower() for word in split_message]
+    return normalized_words
     # *** END CODE HERE ***
 
 
@@ -41,6 +47,20 @@ def create_dictionary(messages):
     """
 
     # *** START CODE HERE ***
+    maps =Counter()
+    for message in messages:
+        words = get_words(message)
+        unique_words = words
+        maps.update(unique_words)
+    vocab = {}
+    current_index = 0
+    
+    for word, count in maps.items():
+        if count >= 5:
+            vocab[word] = current_index
+            current_index += 1
+            
+    return vocab
     # *** END CODE HERE ***
 
 
@@ -62,6 +82,16 @@ def transform_text(messages, word_dictionary):
         A numpy array marking the words present in each message.
     """
     # *** START CODE HERE ***
+    m = len(messages)
+    n= len(word_dictionary)
+    array_np = np.zeros((m, n), dtype=int)
+    for i,message in enumerate(messages):
+        words=get_words(message)
+        for word in words:
+            if word in word_dictionary:
+                j = word_dictionary[word]
+                array_np[i][j]+=1
+    return array_np
     # *** END CODE HERE ***
 
 
@@ -82,6 +112,20 @@ def fit_naive_bayes_model(matrix, labels):
     """
 
     # *** START CODE HERE ***
+    n = matrix.shape[1]
+    thetas=np.zeros((2,n),dtype=float)
+    thetas[0:,] = np.sum(matrix[labels==0],axis=0)
+    thetas[1:,] = np.sum(matrix[labels==1],axis=0)
+    thetas+=1
+    row_sums= np.sum(thetas,axis=1,keepdims=1)
+    thetas/=row_sums
+    p0 = np.mean(labels==0)
+    p1= 1 - p0
+    model = {
+        "log_priors": np.log([p0,p1]),
+        "log_thetas": np.log(thetas)
+    }
+    return model
     # *** END CODE HERE ***
 
 
@@ -98,6 +142,9 @@ def predict_from_naive_bayes_model(model, matrix):
     Returns: A numpy array containg the predictions from the model
     """
     # *** START CODE HERE ***
+    # log(P) + X @ log(\Theta)^T
+    posterior_scores=(model["log_priors"]+matrix @ model["log_thetas"].T)
+    return np.argmax(posterior_scores, axis=1)
     # *** END CODE HERE ***
 
 
@@ -114,6 +161,11 @@ def get_top_five_naive_bayes_words(model, dictionary):
     Returns: The top five most indicative words in sorted order with the most indicative first
     """
     # *** START CODE HERE ***
+    ind_arr=model["log_thetas"][1]-model["log_thetas"][0]
+    top_5_indices = np.argsort(ind_arr)[-5:][::-1]
+    index_to_word = {v: k for k, v in dictionary.items()}
+    top_5_keys = [index_to_word[idx] for idx in top_5_indices]
+    return top_5_keys
     # *** END CODE HERE ***
 
 
@@ -134,6 +186,15 @@ def compute_best_svm_radius(train_matrix, train_labels, val_matrix, val_labels, 
         The best radius which maximizes SVM accuracy.
     """
     # *** START CODE HERE ***
+    best_radius = 0
+    best_acc = 0
+    for radius in radius_to_consider:
+        pred_labels=svm.train_and_predict_svm(train_matrix,train_labels,val_matrix,radius)
+        acc = np.mean(pred_labels==val_labels)
+        if acc > best_acc:
+            best_acc = acc
+            best_radius = radius
+    return best_radius
     # *** END CODE HERE ***
 
 
