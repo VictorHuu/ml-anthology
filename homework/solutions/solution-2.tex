@@ -3,9 +3,9 @@
 \usepackage{amsmath, amssymb, amsfonts}
 \usepackage{fancyhdr} 
 \usepackage[margin=1in]{geometry}
-
-% --- minimal fix for fancyhdr warning ---
-\setlength{\headheight}{14pt}  % 增加页眉高度，避免 fancyhdr 警告
+\usepackage{graphicx}
+\usepackage{subcaption}
+\setlength{\headheight}{14pt} 
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -145,5 +145,94 @@ Finally we get
 \end{eqnarray*}
 Let $\gamma$ be $\frac{2\sigma^2}{b}$Q.E.D.
 \end{itemize}
+\newpage
+\section{Constructing Kernels}
+Let $G_1=[K_1(x_i,x_j)]$ be the corresponding Gram matrix for $K_1$,and let $G_2=[K_2(x_i,x_j)]$ be the corresponding Gram matrix for $K_2$.And according to Mercer's Theorem,both $G_1$ and $G_2$ are semi-definite,that is $\forall z\in R^n,z^TG_1z\ge 0,z^TG_2z\ge 0$,$G_1\succeq 0,G_2\succeq 0$
+\begin{itemize}
+\item[(a)] \textbf{Yes.}The Gram matrix for $K$ is $G=G_1+G_2$,according to Mercer's Theorem,since $\forall z\in R^n,z^TGz=z^T(G_1+G_2)z=z^TG_1z+z^TG_2z\ge 0$,hence $G\succeq 0$,so $K$ is a kernel function.
+\item[(b)] \textbf{Not necessarily.} Suppose that $K_1(x,z)=x^Tz,K_2(x,z)=2x^Tz$
+\item[(c)] \textbf{Yes.} The Gram matrix for $K$ is $G=aG_1$,according to Mercer's Theorem,since $\forall z\in R^n,z^TGz=z^T(aG_1)z=az^TG_1z\ge 0$,hence $G\succeq 0$,so $K$ is a kernel function.
+\item[(d)] \textbf{No.} The Gram matrix for $K$ is $G=aG_1$,according to Mercer's Theorem,since $\forall z\in R^n,z^TGz=z^T(aG_1)z=az^TG_1z\le 0$,hence $G\preceq 0$,so $K$ isn't a kernel function.
+\item[(e)] \textbf{Yes.} The Gram matrix for $K$ is $G=G_1\circ G_2,c_{ij}=a_{ij}b_{ij}$,Since $G_1$ and $G_2$ are semi-definite,they can be decomposed into $G_1=\sum_{k=1}^r x_kx_k^H,G_2=\sum_{l=1}^s y_ly_l^H$,and $r=rank(G_1),s=rank(G_2)$.Then $G=G_1\circ G_2=(\sum_{k=1}^r x_kx_k^H)\circ (\sum_{l=1}^s y_ly_l^H)=\sum_{k=1}^r\sum_{l=1}^s (x_kx_k^H)\circ(y_ly_l^H)$ Now we need to prove that $(xx^H)\circ(yy^H)$ is PSD.
+\begin{eqnarray*}
+(xx^H)\circ(yy^H)_{ij}=(x_i \overline{x_j})(y_y\overline{y_j})=(x_iy_i)(\overline{x_jy_j})
+\end{eqnarray*}
+Thus, $(xx^H)\circ(yy^H)=zz^H\succeq 0$,hence $G=\sum_{k=1}^r\sum_{l=1}^s (x_kx_k^H)\circ(y_ly_l^H)\succeq 0$,so K is a kernel function.
+\item[(f)] \textbf{Yes.} K(x,z)=f(x)f(z)=f(z)f(x)=K(z,x) so it satifies the commtative law.
 
+Define a vector space 
+\[
+\mathbf{H} = \Big\{ \sum_i \alpha_i f(x_i) \;\big|\; \alpha_i \in \mathbb{R}, \; x_i \in \Xi \Big\}
+\]
+and its inner product
+\[
+\langle f(x), f(z) \rangle_{\mathbf{H}} = f(x) f(z).
+\] 
+Since 
+\[
+\langle f(x), f(z) \rangle_{\mathbf{H}} = \langle f(z), f(x) \rangle_{\mathbf{H}},
+\]
+\[
+\langle a f(x) + b f(y), f(z) \rangle_{\mathbf{H}} = a f(x) f(z) + b f(y) f(z),
+\]
+and
+\[
+\langle f(x), f(x) \rangle_{\mathbf{H}} = f(x)^2 \ge 0,
+\]
+\(\mathbf{H}\) is a Hilbert space.
+
+
+For arbitrary finite samples $\{x_1,\cdots,x_n\}$ and $c_i\in R$:
+\begin{eqnarray*}
+\sum_{i,j}c_ic_j K(x_i,x_j)=\sum_{i,j}f(x_i)f(x_j)={\|\sum_i c_if(x_i)\|}^2
+\end{eqnarray*}
+So the Gram matrix for $K$ is postive semi-definite,thus $K$ is a kernel function.
+\item[(g)] \textbf{Yes.}Since $K_3$ is a kernel function,there exists a function called $\kappa,\mathbb{R}^n ->\mathbb{R}$ such that $K_3(x,z)=\kappa(x)^T\kappa(z)$, so $K(x,z)=K_3(\phi(x),\phi(z))={(\kappa\circ {\phi(x)})}^T{\kappa\circ {\phi(z)}}$.We can easily show that $\kappa \circ \phi$ corresponds to a Hibert space,and K satisfies the commutative law since $K(x,z)={(\kappa\circ {\phi(x)})}^T{\kappa\circ {\phi(z)}}={(\kappa\circ {\phi(z)})}^T{\kappa\circ {\phi(x)}}=K(z,x)$
+
+For arbitrary finite samples $\{x_1,\cdots,x_n\}$ and $c_i\in R$:
+\begin{eqnarray*}
+\sum_{i,j}c_ic_j K(x_i,x_j)=\sum_{i,j}{(\kappa\circ {\phi(x_i)})}{(\kappa\circ {\phi(x_j)})}={\|\sum_i {(\kappa\circ {\phi(x_i)})}\|}^2
+\end{eqnarray*}
+So the Gram matrix for $K$ is postive semi-definite,thus $K$ is a kernel function.
+\item[(h)]\textbf{Yes.}The Gram matrix for $K$ is $G=p(G),p(G)=\sum_{i} \alpha_i x^i,\alpha_i>0$,according to Mercer's Theorem and Schur's Theorem,since $\forall z\in R^n,z^TGz=z^Tp(G)z=z^T\sum_{i} \alpha_i G^{\circ n}z\ge 0$,hence $G\succeq 0$,so $K$ is a kernel function.
+\end{itemize}
+\newpage
+\section{Kernelizing the Perceptron}
+\begin{itemize}
+\item[(a)]
+According to reprensenter theorem $\theta^{(i)}=\sum_{j=1}^i \beta_j \phi(x^{(j)})$,notice that when $\theta_0=0$,all of $\beta_i=0$,and then we apply the kernel trick:
+\begin{eqnarray*}
+\theta=\sum_{j=1}^i \beta_j \phi(x^{(j)}) +\alpha(y^{(i+1)}-g(\theta^T\phi(x^{(i+1)}))) \phi(x^{(i+1)})
+\end{eqnarray*}
+Obviously,we have $\beta_{i+1}=\alpha(y^{(i+1)}-g(\theta^T\phi(x^{(i+1)})))$,then replacing $\theta$ by $\sum_{j=1}^i \beta_j \phi(x^{(j)})$,we get
+\begin{eqnarray*}
+\beta_{i+1}\\
+&=&\alpha(y^{(i+1)}-g(\theta^T\phi(x^{(i+1)})))\\
+&=&\alpha(y^{(i+1)}-g({\left(\sum_{j=1}^i \beta_j \phi(x^{(j)})\right)}^T\phi(x^{(i+1)})))\\
+&=&\alpha(y^{(i+1)}-g(\sum_{j=1}^i \beta_j \phi(x^{(j)})^T\phi(x^{(i+1)})))\\
+&=&\alpha(y^{(i+1)}-g(\sum_{j=1}^i \beta_j <\phi(x^{(j)}),\phi(x^{(i+1)})>))\\
+&=&\alpha(y^{(i+1)}-g(\sum_{j=1}^i \beta_j K(x^{(j)},x^{(i+1)})))
+\end{eqnarray*}
+Thus,when $i\ge 1$,$\beta_{i+1}=\alpha(y^{(i+1)}-g(\sum_{j=1}^{i} \beta_j K(x^{(j)},x^{(i+1)})))$,$\theta^{(i)}=\sum_{j=1}^{(i)}\beta_j\phi(x^{(j)})$
+\item[(c)]
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/p05_dot_output.png}
+        \caption{Dot product kernel}
+        \label{fig:dot_product}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/p05_rbf_output.png}
+        \caption{RBF kernel}
+        \label{fig:rbf_kernel}
+    \end{subfigure}
+    \caption{Kernelizing the Perceptron with different kernel functions.}
+    \label{fig:kernel_comparison}
+\end{figure}
+The dot product kernel fails because $C_1$ (red points) forms a non-convex, hollow distribution surrounding the convex set $C_2$ (blue points). By the Supporting Hyperplane Theorem, any hyperplane $H$ attempting to separate $C_2$ from $C_1$ would, when shifted to touch the boundary of $C_2$, act as a supporting hyperplane for $C_2$. However, because $C_2$ is contained within the convex hull of $C_1$, any such supporting hyperplane $H$ must necessarily intersect the distribution of $C_1$. Thus, no single hyperplane can exist that keeps all points of $C_2$ on one side and all points of $C_1$ on the other
+\end{itemize}
 \end{document}
