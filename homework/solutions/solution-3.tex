@@ -1,0 +1,324 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{fancyhdr} 
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\setlength{\headheight}{14pt} 
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{CS229 Solution Set \#3}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\title{Solution Set 3: Deep Learning \& Unsupervised learning}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+	
+	\maketitle
+	\thispagestyle{plain}
+
+\section{A Simple Neural Network}
+\begin{enumerate}
+	\item $z^{[1]}=w^{[1]}x+b^{[1]}$
+	\item $a^{[1]}=\sigma (z^{[1]})$
+	\item $z^{[2]}=w^{[2]}a^{[1]}+b^{[2]}$
+	\item $a^{[2]}=\sigma(z^{[2]})$
+	\item $z^{[3]}=w^{[3]}a^{[2]}+b^{[3]}$
+	\item $\hat{y}=a^{[3]}=\sigma(z^{[3]})$
+\end{enumerate}
+\begin{enumerate}
+	\item [(a)] 
+	\begin{eqnarray*}
+		\frac{\partial L}{\partial w^{[2]}}\\
+		&=& \frac{\partial \left((\sigma(w^{[2]}a^{[1]}+b^{[2]})-y)^2\right)}{\partial w^{[2]}}\\
+		&=& 2(\sigma(w^{[2]}a^{[1]}+b^{[2]})-y)\frac{\partial \left(\sigma(w^{[2]}a^{[1]}+b^{[2]})\right)}{\partial w^{[2]}}\\
+		&=& 2(\sigma(w^{[2]}a^{[1]}+b^{[2]})-y)\sigma(w^{[2]}a^{[1]}+b^{[2]})(1-\sigma(w^{[2]}a^{[1]}+b^{[2]}))\frac{\partial \left(w^{[2]}a^{[1]}+b^{[2]}\right)}{\partial w^{[1]}}\\
+		&=&2(\sigma(w^{[2]}a^{[1]}+b^{[2]})-y)\sigma(w^{[2]}a^{[1]}+b^{[2]})(1-\sigma(w^{[2]}a^{[1]}+b^{[2]})){a^{[1]}}^T
+	\end{eqnarray*}
+	Note that $\delta^{[2]}=2(\sigma(w^{[2]}a^{[1]}+b^{[2]})-y)\sigma(w^{[2]}a^{[1]}+b^{[2]})(1-\sigma(w^{[2]}a^{[1]}+b^{[2]}))$
+	\begin{eqnarray*}
+		\delta^{[1]}\\
+		&=&{w^{[2]}}^T\delta^{[2]}\odot \left(\sigma(w^{[1]}x+b^{[1]})(1-\sigma(w^{[1]}x+b^{[1]}))\right)
+	\end{eqnarray*}
+	And $\frac{\partial L}{\partial w^{[1]}}=\delta^{[1]}x^T$
+	And 
+	\begin{eqnarray*}
+	\frac{\partial L}{\partial w^{[1]}} 
+	&=& \delta^{[1]} x^T \\
+	&=& {w^{[2]}}^T{\left(2(\sigma(w^{[2]}a^{[1]}+b^{[2]})-y)\sigma(w^{[2]}a^{[1]}+b^{[2]})(1-\sigma(w^{[2]}a^{[1]}+b^{[2]}))\right)}\odot \left(\sigma(w^{[1]}x+b^{[1]})(1-\sigma(w^{[1]}x+b^{[1]}))\right)x^T\\
+	&=&{w^{[2]}}^T{\left(2(o-y)o(1-o)\right)}\odot \left(H\odot(1-H)\right)x^T
+\end{eqnarray*}
+Note that $H=[h_1(x),h_2(x),h_3(x)]^T$
+
+Specifically,
+\begin{eqnarray*}
+	\frac{\partial L}{\partial w_{1,2}^{[1]}} 
+	&=& \delta^{[1]}_2 x_1 \\
+	&=& w_2^{[2]} 2 (o-y)o(1-o) h_2(x) (1-h_2(x))x_1
+\end{eqnarray*}
+So the final answer is 
+\begin{eqnarray*}
+	\frac{\partial l}{\partial w_{1,2}^{[1]}} 
+	&=& \frac{1}{m}\sum_{i=1}^m {\delta^{[1]}_2}^{(i)} x_1^{(i)} \\
+	&=& \frac{1}{m}\sum_{i=1}^m w_2^{[2]} 2 (o^{(i)}-y^{(i)})o^{(i)}(1-o^{(i)}) h_2(x^{(i)}) (1-h_2(x^{(i)}))x_1^{(i)}
+\end{eqnarray*}
+Thus the update is
+\begin{eqnarray*}
+	w_{1,2}^{[1]}= w_{1,2}^{[1]}-\alpha{\left(\frac{1}{m}\sum_{i=1}^m w_2^{[2]} 2 (o^{(i)}-y^{(i)})o^{(i)}(1-o^{(i)}) h_2(x^{(i)}) (1-h_2(x^{(i)}))x_1^{(i)}\right)}
+\end{eqnarray*}
+	\item [(b)] Yes. Because there exists a perfect triangle that can separate 2 categories. The corresponding 3 lines are $l1:x_1-0.5=0$,$l2:x_1+x_2-4=0$,$l3:x_2-0.5=0$ where
+	\begin{enumerate}
+		\item $w_{0,1}=-0.5,w_{1,1}=1,w_{2,1}=0$
+		\item $w_{0,2}=-4,w_{1,2}=1,w_{2,2}=1$
+		\item $w_{0,3}=-0.5,w_{1,2}=0,w_{2,2}=1$
+	\end{enumerate}.
+	Then when $w_{*,1}^Tx<0,w_{*,2}^Tx>0,w_{*,3}^Tx<0$,$y=1$ (i.e. a data point is totally outside of the triangle) holds,and $y=0$ holds otherwise.Hence an assumed line for classification in the hidden layer should be $-h_1+h_2-h_3-1.5>0$,thus the weights of hidden layer are $-1.5,-1,1,-1$.
+	\item [(b)] No. It's because after 3 activation of the hidden layer,whatever weights imposed on 3 neurons of the hidden layer,the first 2 layers combined will behave like a single linear neuron.So it can only separate linearly but fails to tell the triangle contour. Thus however the weights are set,it can't classify the dataset with 100\% accuracy.
+\end{enumerate}
+\section{KL divergence and Maximum Likelihood}
+\begin{enumerate}
+	\item[(a)] \begin{eqnarray*}
+		D_{KL}(P)=-\sum_{x\in \chi}P(x)\log{\frac{Q(x)}{P(x)}}\\
+		= -\mathbb{E}[\log{\frac{Q(x)}{P(x)}]}\ge -\log \mathbb{E}{[\frac{Q(X)}{P(X)}]}(Jensen's inequality)\\
+		= -\log 1=0\quad\quad\quad\quad\quad\quad\quad\quad\quad
+	\end{eqnarray*}
+	$-\mathbb{E}[\log{\frac{Q(x)}{P(x)}]}\ge -\log \mathbb{E}{[\frac{Q(X)}{P(X)}]}$ only holds when $\frac{Q(x)}{P(x)}=1$ i.e. $Q(x)=P(x)$ 
+	\item[(b)] 
+	\begin{eqnarray*}
+	D_{KL}(P(X,Y)||Q(X,Y))=\sum_{x}\sum_{y} P(X,Y) \log \frac{P(X,Y)}{Q(X,Y)}\\
+	= \sum_{x}\sum_{y} P(Y|X)P(X) \log \frac{P(Y|X)P(X)}{Q(Y|X)Q(X)}\quad\quad\quad\\
+	= \sum_{x}P(X)\sum_{y} P(Y|X) \log {\frac{P(Y|X)}{Q(Y|X)}}+P(Y|X) \log{\frac{P(X)}{Q(X)}}\\
+	= \sum_{x}P(X)\sum_{y} P(Y|X) \log {\frac{P(Y|X)}{Q(Y|X)}}+\sum_{x}P(X)\sum_{y}P(Y|X) \log{\frac{P(X)}{Q(X)}}\\
+	= \sum_{x}P(X)\sum_{y} P(Y|X) \log {\frac{P(Y|X)}{Q(Y|X)}}+\sum_{x}P(X) \log{\frac{P(X)}{Q(X)}}\\
+	= D_{KL}(P(X)||Q(X))+D_{KL}(P(Y|X)||Q(Y|X))
+	\end{eqnarray*}
+	\item[(c)] 
+	\begin{eqnarray*}
+	\arg \max_{\theta} \sum_{i=1}^m \log P_{theta}(x^{(i)})\\
+	&=& \arg \max_{\theta} \sum_{x\in \chi} \hat{P}(x) \log P_{\theta}(x)\\
+	&=& \arg \min_{\theta} -\sum_{x\in \chi} \hat{P}(x) \log P_{\theta}(x)+ \sum_{x\in \chi} \hat{P}(x) \log \hat{P}(x)\\
+	&=& \arg \min_{\theta} D_{KL}(\hat{P}||P_{\theta})
+\end{eqnarray*}
+\end{enumerate}
+\section{KL Divergence, Fisher Information, and the Natural Gradient}
+\subsection{Score function}
+\begin{eqnarray*}
+&&\mathbb{E}_{y\sim p(y;\theta)}[\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}]\\
+&=& \int_{-\infty}^{+\infty}p(y;\theta)\nabla_{\theta\prime} \log p(y;\theta\prime)|_{\theta\prime=\theta}dy\\
+&=& \int_{-\infty}^{+\infty}p(y;\theta) \frac{1}{p(y;\theta\prime)|_{\theta\prime=\theta}}\nabla_{\theta\prime}p(y;\theta\prime)|_{\theta\prime=\theta}dy(\text{By Leibniz Rule})\\
+&=& \int_{-\infty}^{+\infty}\nabla_{\theta\prime}p(y;\theta\prime)|_{\theta\prime=\theta}dy\\
+&=& \nabla_{\theta\prime} \int_{-\infty}^{+\infty}p(y;\theta)dy\\
+&=& \nabla_{\theta\prime} 1\\
+&=&0
+\end{eqnarray*}
+\subsection{Fisher Information}
+\begin{eqnarray*}
+	I(\theta) &=&Cov_{y\sim p(y;\theta)}[\nabla_{\theta\prime}\log p(y;\theta\prime)|_{\theta\prime=\theta}]\\
+	&=&\int_{-\infty}^{+\infty}\left(\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}-\mathbb{E}_{y\sim p(y;\theta)}[\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}]\right)\\
+	&\quad&\left(\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}-\mathbb{E}_{y\sim p(y;\theta)}[\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}]\right)^T p(y|\theta)dy\\
+	&=&\int_{-\infty}^{+\infty}\left(\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}\right)\left(\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}\right)^T p(y|\theta)dy\\
+	&=&\mathbb{E}_{y \sim p(y;\theta)} {[\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}{\nabla_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}}^T]_{\theta=\theta\prime}}
+\end{eqnarray*}
+\subsection{Fisher Information(alternate form)}
+\begin{eqnarray*}
+	&&\mathbb{E}_{y \sim p(y;\theta)} [-\nabla^2_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}]\\
+	&=& \int_{-\infty}^{+\infty} -\nabla^2_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta} p(y|\theta) dy\\
+	&=& \int_{-\infty}^{+\infty} -\nabla_{\theta\prime}(\nabla_{\theta\prime} p(y;\theta)\frac{1}{p(y;\theta)}|_{\theta\prime=\theta}) p(y|\theta) dy\\
+	&=& \int_{-\infty}^{+\infty} -{\left(\nabla^2_{\theta\prime} p(y;\theta)\frac{1}{p(y;\theta)}-\frac{1}{(p(y;\theta))^2}\nabla_{\theta\prime} p(y;\theta)\nabla_{\theta\prime}^Tp(y;\theta)\right)}p(y;\theta)dy\\
+	&=&\int_{-\infty}^{+\infty} -{\left(\nabla^2_{\theta\prime} p(y;\theta)-\frac{1}{p(y;\theta)}\nabla_{\theta\prime} p(y;\theta)\nabla_{\theta\prime}p(y;\theta)^T\right)}dy\\
+	&=& -\nabla^2_{\theta\prime}\int_{-\infty}^{+\infty}  p(y;\theta)dy+\int_{-\infty}^{+\infty}\frac{1}{p(y;\theta)}\nabla_{\theta\prime} p(y;\theta)\nabla_{\theta\prime}p(y;\theta)^Tdy\\
+	&=& \int_{-\infty}^{+\infty}\frac{1}{(p(y;\theta))^2}\nabla_{\theta\prime} p(y;\theta)\nabla_{\theta\prime}p(y;\theta)^Tp(y;\theta)dy\\
+	&=& \int_{-\infty}^{+\infty}\nabla_{\theta\prime} \log p(y;\theta)\nabla_{\theta\prime}\log p(y;\theta)^Tp(y;\theta)dy\\
+	&=& \mathbb{E}[\nabla_{\theta\prime} \log p(y;\theta)\nabla_{\theta\prime}\log p(y;\theta)^T]\\
+	&=& I(\theta)
+\end{eqnarray*}
+\subsection{Approximating $D_{KL}$ with Fisher Information}
+\begin{eqnarray*}
+	&D_{KL}(p_{\theta}||p_{\theta+d})\\
+	&=& \int_{-\infty}^{+\infty} p(y;\theta) \log\frac{p(y;\theta+d)}{p(y;\theta)}dy\\
+	&=& \int_{-\infty}^{+\infty} p(y;\theta) [d\nabla_{\theta\prime} \log p(y;\theta\prime)|_{\theta\prime=\theta}+d^T\nabla^2_{\theta\prime} \log p(y;\theta\prime)|_{\theta\prime=\theta}d]dy\\
+	&=& d\int_{-\infty}^{+\infty} p(y;\theta) [\nabla_{\theta\prime} \log p(y;\theta\prime)|_{\theta\prime=\theta}]dy+\frac{1}{2}d^T\int_{-\infty}^{+\infty} p(y;\theta) \nabla^2_{\theta\prime} \log p(y;\theta\prime)|_{\theta\prime=\theta}]dy d\\
+	&=& d\mathbb{E}[\nabla_{\theta\prime} \log p(y;\theta)]+\frac{1}{2}d^T\mathbb{E}[\nabla_{\theta\prime} \log p(y;\theta)\nabla_{\theta\prime}\log p(y;\theta)^T]d\\
+	&=& d\time 0+\frac{1}{2}d^T I(\theta)d\\
+	&=& \frac{1}{2}d^T I(\theta)d
+\end{eqnarray*}
+\subsection{Natural Gradient}
+The optimization problem after substitution will become:
+\[
+d^*=\arg \max_d l(\theta)+d^T\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta} s.t. \frac{1}{2} d^T I(\theta) d=c
+\]
+
+We instead optimize the Lagrangian $L(d,\theta)$,which is defined as
+\[
+L(d,\theta)= l(\theta)+d^T\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}+\lambda(\frac{1}{2} d^T I(\theta) d-c)
+\]
+In order to optimize the above,we construct the following system of equations:
+\[
+\nabla_d L(d,\lambda)=\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}+\lambda I(\theta)d\quad (a)
+\]
+And
+\[
+\nabla_{\lambda} L(d,\lambda)=\frac{1}{2} d^T I(\theta) d-c\quad(b)
+\]
+From (a) we can get $\hat{d}(\lambda)=-\frac{1}{\lambda}I^{-1}(\theta)\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta} \quad (c)$
+
+Then we substitute $(b)$ with $(c)$,so we have
+\[
+{\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}}^TI^{-1}(\theta){\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}}=2\lambda^2c\quad (d)
+\]
+After further reduction,we get
+\[
+\lambda=-\sqrt{\frac{{\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}}^TI^{-1}(\theta){\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}}}{2c}}\quad (e)
+\]
+Then plug (e) into (c) we get:
+\[
+\hat{d}=\sqrt{\frac{2c}{{\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}}^TI^{-1}(\theta){\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}}}}I^{-1}(\theta)\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}
+\]
+\subsection{Relation to Newton's Method}
+The direction of updates for Newton's Method is:
+\[
+-(\nabla^2_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta})^{-1}\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}\quad (a)
+\]
+And the direction for Natural Gradient is:
+\[
+I^{-1}(\theta)\nabla_{\theta\prime=\theta}l(\theta\prime)|_{\theta\prime=\theta}\quad (b)
+\]
+According to $3.3$ 	$\mathbb{E}_{y \sim p(y;\theta)} [-\nabla^2_{\theta\prime}\log p(y;\theta)|_{\theta\prime=\theta}]=I(\theta)$,hence $(a)$ and $(b)$ are in the same direction.
+\section{Semi-supervised EM}
+\subsection{Convergence}
+\begin{eqnarray*}
+	\mathbf{l}(\theta)&=&\sum_{i=1}^m\log p(x^{(i)};\theta)\\
+	&=&\sum_{i=1}^m \log \sum_{z^{(i)}} p(x^{(i)},z^{(i)};\theta)\\
+	&\ge& \sum_{i=1}^m \sum_{z^{(i)}} Q_i^{(t)}\log \frac{p(x^{(i)},z^{(i)};\theta)}{Q_i^{(t)}}(by Jensen's inequalitys)
+\end{eqnarray*}
+The inequality only holds with equality when $Q_i^{(t)}=p(z^{(i)}|x^{(i)};\theta)$.And since $\theta^{(t+1)}$ maximize the $RHS$,we have
+\begin{eqnarray*}
+l_{semi-sup}(\theta^{(t+1)})&\ge& \sum_{i=1}^m ELBO(x^{(i)};Q_i^{(i)},\theta^{(t+1)})+\alpha\sum_{i=1}^{\hat{m}}\log p(\hat{x}^{(i)},\hat{z^{(i)}};\theta^{(t+1)})\\
+&\ge& \sum_{i=1}^m ELBO(x^{(i)};Q_i^{(i)},\theta^{(t)})+\alpha\sum_{i=1}^{\hat{m}}\log p(\hat{x}^{(i)},\hat{z^{(i)}};\theta^{(t)})\\
+&=&l_{un-sup}(\theta^{(t)})+\alpha l_{sup}(\theta^{(t)})\\
+&=&l_{semi-sup}(\theta^{(t)})
+\end{eqnarray*}
+where the last inequality holds by $\theta^{(t+1)}$ is explicitly chosen to be
+\[
+\arg \max_{\theta} l_{semi-sup} (\theta)
+\]
+\subsection{Semi-supervised E-Step}
+\begin{eqnarray*}
+l_{semi-sup}(\phi,\mu,\Sigma)=\sum_{i=1}^m \left(\log p(x^{(i)}|z^{(i)};\mu,\Sigma)+\log p(z^{(i)};\phi)\right)+\alpha\sum_{i=1}^{\hat{m}}\log p(\hat{x}^{(i)};\phi,\mu,\Sigma)
+\end{eqnarray*}
+In the \textbf{E-step}.For each $i\in[1,m],j$
+\begin{eqnarray*}
+w_j^{(i)}= p(z^{(i)}=j|x^{(i)};\mu,\Sigma)
+\end{eqnarray*}
+For each $i\in[1,\hat{m}],j$
+\begin{eqnarray*}
+	u_j^{(i)}=\mathbf{1}(z^{(i)}=j)
+\end{eqnarray*}
+
+All the latent variables that needs to be re-estimate are $z^{(i)},i=1,...,m$
+\subsection{Semi-supervised M-Step}
+Maximizing $l_{semi-sup}(\phi,\mu,\Sigma)$ w.r.t. $\phi,\mu,\Sigma$ gives the parameters:
+\[
+\phi_j=\frac{\sum_{i=1}^m p(z^{(i)}=j|x^{(i)};\mu,\Sigma)+\alpha\sum_{i=1}^{\tilde{m}} \mathbf{1}(\tilde{z}^{(i)}=j)}{m+\alpha\tilde{m}}
+\]
+\[
+\mu_j=\frac{\sum_{i=1}^m p(z^{(i)}=j|x^{(i)};\mu,\Sigma)x^{(i)}+\alpha\sum_{i=1}^{\tilde{m}} \mathbf{1}(\tilde{z}^{(i)}=j)\tilde{x}^{(i)}}{\sum_{i=1}^m p(z^{(i)}=j|x^{(i)};\mu,\Sigma)+\alpha\sum_{i=1}^{\tilde{m}} \mathbf{1}(\tilde{z}^{(i)}=j)}
+\]
+\[
+\Sigma_j=\frac{\sum_{i=1}^m p(z^{(i)}=j|x^{(i)};\mu,\Sigma)(x^{(i)}-\mu_j)(x^{(i)}-\mu_j)^T+\alpha\sum_{i=1}^{\tilde{m}} \mathbf{1}(\tilde{z}^{(i)}=j)(\tilde{x}^{(i)}-\mu_j)(\tilde{x}^{(i)}-\mu_j)^T}{\sum_{i=1}^m p(z^{(i)}=j|x^{(i)};\mu,\Sigma)+\alpha\sum_{i=1}^{\tilde{m}} \mathbf{1}(\tilde{z}^{(i)}=j)}
+\]
+\subsection{[Coding Problem] Classical (Unsupervised) EM Implementation}
+\begin{figure}[htbp]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/p03_pred_0.png}
+		\caption{Unsupervised EM Implementation (Batch I)}
+		\label{fig:un-sup-em-1}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/p03_pred_1.png}
+		\caption{Unsupervised EM Implementation (Batch II)}
+		\label{fig:un-sup-em-2}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/p03_pred_2.png}
+		\caption{Unsupervised EM Implementation (Batch III)}
+		\label{fig:un-sup-em-3}
+	\end{subfigure}
+	\caption{Unsupervised EM Implementation across three batches.}
+	\label{fig:un-sup-em-all}
+\end{figure}
+
+\subsection{[Coding Problem] Semi-supervised EM Implementation}
+\begin{figure}[htbp]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/p03_pred_ss_0.png}
+		\caption{Semi supervised EM Implementation (Batch I)}
+		\label{fig:semi-sup-em-1}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/p03_pred_ss_1.png}
+		\caption{Semi supervised EM Implementation (Batch II)}
+		\label{fig:semi-sup-em-2}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/p03_pred_ss_2.png}
+		\caption{Semi supervised EM Implementation (Batch III)}
+		\label{fig:semi-sup-em-3}
+	\end{subfigure}
+	\caption{Semi supervised EM Implementation across three batches.}
+	\label{fig:semi-sup-em-all}
+\end{figure}
+\subsection{Comparison of Unsupervised and Semi-supervised EM.}
+\begin{enumerate}
+	\item Classical EM method takes much more iterations to converge.
+	\item Classical one is more volatile
+	\item Semi-supervised method outperforms the classical one.
+\end{enumerate}
+\section{K-means for compression}
+\subsection{[Coding Problem] K-Means Compression Implementation}
+\begin{figure}[htbp]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/peppers-large.png}
+		\caption{The original image}
+		\label{fig:pepper-big}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/pepper-condensed.png}
+		\caption{Image after compression}
+		\label{fig:pepper-quant}
+	\end{subfigure}
+	\caption{Vector Quantization of Image}
+	\label{fig:vec-quant}
+\end{figure}
+\subsection{Compression Factor}
+\[
+\text{Compression Factor} \approx \frac{\text{Original Bits per Pixel}}{\text{Bits per Pixel after Quantization}} = \frac{24}{\lceil \log_2 K \rceil}
+\]
+
+\[
+\text{For } K = 16: \quad \text{Compression Factor} \approx \frac{24}{\log_2 16} = \frac{24}{4} = 6
+\]
+
+\end{document}
