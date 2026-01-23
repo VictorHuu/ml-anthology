@@ -1,0 +1,135 @@
+\documentclass[]{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\title{Lecture 15 Factor Analysis}
+\author{Yuntao Hu}
+
+\begin{document}
+	
+	\maketitle
+	\section{EM Convergence}
+	\begin{eqnarray*}
+			J(\theta,Q)=\sum_i \sum_{z^{i}} Q_1(z^{(i)})\log \frac{P(x^{(i)},z^{(i)};\theta)}{Q(z^{(i)})}
+	\end{eqnarray*}
+	We knew $l(\theta) \ge J(\theta,Q)$
+	
+	In E-Step,maximize J w.r.t. Q
+	
+	In M-Step,maximize J w.r.t. $\theta$, sometimes called coordinate ascent. 
+	
+	\subsection{Model on Single Gaussian}
+	Suppose that dimension of features $n\gg m$
+	\[
+		x\ sim N(\mu,\Sigma)
+	\]
+	where $\Sigma$ will be singular ,hence invertible and the determinant will be 0
+	
+	Suppose that $m = n =2$,and the covariance matrix is $\begin{pmatrix}1 &0\\0&0\end{pmatrix}$the contour will be squished infinitely thin.
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/p15-singular-cov.png}
+		\caption{Gaussian with $m=n=2$ but $r(\Sigma)=1$}
+		\label{fig:p15poorlyguassian}
+	\end{figure}
+	\section{Problem with EM}
+	\subsection{Constrain $\Sigma$ to be diagonal}
+	$\Sigma=\begin{pmatrix}
+		\sigma_1^2&&0&\\
+		&\sigma_2^2&&&\\
+		&&\sigma_3^2&&\\
+		&0&\cdot&\\
+		&&&&\sigma_n^2
+	\end{pmatrix}$
+	
+	Contour of Gaussian density with diagonal $\Sigma$ will be axis-aligned ellipse.
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/p15-diagonal-cov.png}
+		\caption{Gaussian with diagonal $\Sigma$}
+		\label{fig:p15axis-aliged-guassian}
+	\end{figure}
+	\subsection{Constrain $\Sigma$ to be $\sigma^2I$}
+	Contour of Gaussian density will be circular.
+	\begin{figure}[htbp]
+		\centering
+		\includegraphics[width=0.8\textwidth]{images/p15-identity-cov.png}
+		\caption{Gaussian with $\Sigma=\sigma^2I$}
+		\label{fig:p15cicular-guassian}
+	\end{figure}
+	\begin{quote}
+		\textbf{Q:} Can we apply Wis-hart prior to the singular $\Sigma$?
+		
+		\textbf{A:} Yes,it is a technical solution (by adding a small diagonal value)to make the $\Sigma$ invertible.But it's not the best algorithm for many types of data.
+	\end{quote}
+	\section{Factor Analysis}
+	\quad \quad Factor Analysis (FA) uses EM to estimate parameters $(\mu, \Lambda, \Psi)$ when latent factors $z$
+	 are unobserved. Like standard EM, it iterates \textbf{E-step} (compute $\mathbb{E}[z \mid x]$,
+	  $\mathbb{E}[zz^\top \mid x]$) and \textbf{M-step} (maximize expected complete-data likelihood).
+	   The difference is FA exploits the \textbf{multivariate Gaussian structure}: 
+	\begin{enumerate}
+		\item the E-step has closed-form conditional expectations
+		\item the M-step has analytical updates for $\Lambda$ and diagonal $\Psi$.
+	\end{enumerate}
+	
+	$P(x,z)=P(x|z)P(z)$,$z$ is hidden ,$z\sim N(0,I),z\in R^d,(d<n)$
+	
+	We assume that $x=\mu+\lambda z+\epsilon\quad(a)$ where $\sigma \sim N(0,\Xi)$ , $\epsilon$ is a noise and $\lambda$ is a factor of loading.
+	
+	
+	\textbf{Parameters:}$\mu\in R^n$,$\lambda \in R^{n \times d}$,$\Xi \in R^{n \times n}$ and $\Xi$ is diagonal
+	
+	Equation $(a)$ is equivalent to $x|Z \sim N(\mu+\lambda z,\Xi)$
+	
+	Intuition: map the feature space onto a lower dimensional space with a little bit buzz which de facto adds some dimensions.
+	\section{Multi-variate Gaussian}
+	$x=\begin{pmatrix}
+		x_1\\
+		x_2
+	\end{pmatrix}$ where $x_1\in R^r$,$x_2\in R^s$ hence $x\in R^{r+s}$
+	
+	and $x\sim N(\mu,\Sigma)$ where $\mu=\begin{pmatrix}
+		\mu_1\\
+		\mu_2
+	\end{pmatrix}$,$\mu_1\in R^r$,$\mu_2\in R^s$ and $\Sigma =\begin{pmatrix}
+		\Sigma_{11}&\Sigma_{12}\\
+		\Sigma_{21}&\Sigma_{22}
+	\end{pmatrix}$
+	
+	Marginal:$P(x_1)=\int_{x_2}P(x_1,x_2)dx_2$,then we have $x_1\sim N(\mu_1,\Sigma_{11})$.
+	
+	For $P(x_1|x_2)$ ,we have $x_{1|2}\sim N(\mu_{1|2},\Sigma_{1|2})$ where
+	\[
+		\mu_{1|2}=\mu_1+\Sigma_{12}\Sigma^{-1}_{22}(x_2-\mu_2)
+	\]  
+	\[
+		\Sigma_{1|2}=\Sigma_{11}-\Sigma{12}\Sigma^{-1}_{22}\Sigma_{21}
+	\]
+	Obviously,$\Sigma_{1|2}$ is the Schur complement of $\Sigma_{11}$ to $\Sigma_{22}$
+	
+	then define $\begin{pmatrix}
+		z\\
+		x
+	\end{pmatrix}\sim N(\mu_{x,z},\Sigma),z\sim N(0,I),E(z)=0$
+	
+	$\begin{pmatrix}
+		z\\
+		x
+	\end{pmatrix}\sim N(\begin{pmatrix}
+	0\\
+	\mu
+	\end{pmatrix},\begin{pmatrix}
+	I&\Lambda^T\\
+	\Lambda&\Lambda\Lambda^T\Xi
+	\end{pmatrix})$
+	\subsection{EM}
+	\begin{enumerate}
+		\item E-step
+		\begin{eqnarray*}
+			Q_i(z^{(i)})=P(z^{(i)}|x^{(i)};\theta)
+		\end{eqnarray*}
+		where $z^{(i)}|x^{(i)}\sim N(\mu_{z^{(i)}|x^{(i)}},\Sigma_{z^{(i)}|x^{(i)}})$,$\mu_{z^{(i)}|x^{(i)}}=0+\Lambda^T(\Lambda\Lambda^T+\Xi)^{-1}(x^{(i)}\mu)$,$\Sigma_{z^{(i)}|x^{(i)}}=I-\Lambda^T(\Lambda\Lambda^T+\Xi)^{-1}\Lambda$
+		\item M-step
+		
+	\end{enumerate}
+\end{document}

@@ -1,3 +1,4 @@
+from re import X
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -28,10 +29,19 @@ def main(is_semi_supervised, trial_num):
     # *** START CODE HERE ***
     # (1) Initialize mu and sigma by splitting the m data points uniformly at random
     # into K groups, then calculating the sample mean and covariance for each group
+    m = len(x)
+    x = np.random.permutation(x)
+    groups = np.array_split(x, K)
+
+    mu = np.array([np.mean(g, axis=0) for g in groups])
+    sigma = np.array([np.cov(g, rowvar=False) for g in groups])
+    
     # (2) Initialize phi to place equal probability on each Gaussian
     # phi should be a numpy array of shape (K,)
+    phi = np.full(K, 1/K)
     # (3) Initialize the w values to place equal probability on each Gaussian
     # w should be a numpy array of shape (m, K)
+    w=  np.full((m,K), 1/K)
     # *** END CODE HERE ***
 
     if is_semi_supervised:
@@ -73,17 +83,42 @@ def run_em(x, w, phi, mu, sigma):
     # See below for explanation of the convergence criterion
     it = 0
     ll = prev_ll = None
+    m, n = x.shape
+    K = w.shape[1]
+
     while it < max_iter and (prev_ll is None or np.abs(ll - prev_ll) >= eps):
         pass  # Just a placeholder for the starter code
         # *** START CODE HERE
         # (1) E-step: Update your estimates in w
+        for j in range(K):
+            w[:, j] = phi[j] * multivariate_gaussian(x, mu[j], sigma[j])
+
+        w /= w.sum(axis=1, keepdims=True)
+
         # (2) M-step: Update the model parameters phi, mu, and sigma
+        phi = np.mean(w, axis=0)
+        for j in range(K):
+            mu[j] = np.sum(w[:, j][:, np.newaxis] * x, axis=0) / np.sum(w[:, j])
+            diff = x - mu[j]
+            sigma[j] = (w[:, j][:, np.newaxis] * diff).T @ diff / np.sum(w[:, j])
+
         # (3) Compute the log-likelihood of the data to check for convergence.
         # By log-likelihood, we mean `ll = sum_x[log(sum_z[p(x|z) * p(z)])]`.
         # We define convergence by the first iteration where abs(ll - prev_ll) < eps.
         # Hint: For debugging, recall part (a). We showed that ll should be monotonically increasing.
-        # *** END CODE HERE ***
+        prev_ll = ll
+        likelihoods = np.zeros(m)
+        for i in range(m):
+            temp = 0
+            for j in range(K):
+                temp += phi[j] * multivariate_gaussian(x[i:i+1], mu[j], sigma[j])[0]
+            likelihoods[i] = temp
 
+
+        ll = np.sum(np.log(likelihoods))
+        # *** END CODE HERE
+        it += 1
+        print(it)
     return w
 
 
@@ -115,21 +150,69 @@ def run_semi_supervised_em(x, x_tilde, z, w, phi, mu, sigma):
     # See below for explanation of the convergence criterion
     it = 0
     ll = prev_ll = None
+    m, n = x.shape
+    m_tilde, n_tilde= x_tilde.shape
+    K = w.shape[1]
+    
     while it < max_iter and (prev_ll is None or np.abs(ll - prev_ll) >= eps):
         pass  # Just a placeholder for the starter code
         # *** START CODE HERE ***
         # (1) E-step: Update your estimates in w
+        w_tilde = np.zeros((m_tilde,K))
+        for j in range(K):
+            w[:, j] = phi[j] * multivariate_gaussian(x, mu[j], sigma[j])
+        for j in range(K):
+            w_tilde[:, j] = (z.flatten()==j)# Indicator
+        w /= w.sum(axis=1, keepdims=True)
         # (2) M-step: Update the model parameters phi, mu, and sigma
+        phi = (np.sum(w, axis=0) + alpha*np.sum(w_tilde,axis=0)) / (m + alpha * m_tilde)
+        
+        for j in range(K):
+            mu_unlabeled = np.sum(w[:, j][:, np.newaxis] * x, axis=0)
+            mu_labeled = np.sum(w_tilde[:, j][:, np.newaxis] * x_tilde, axis=0)
+            mu[j] = (mu_unlabeled + alpha * mu_labeled) / (np.sum(w[:, j]) + alpha * np.sum(w_tilde[:, j]))
+            
+            diff_unlabeled = x - mu[j]
+            sigma_unlabeled = (w[:, j][:, np.newaxis] * diff_unlabeled).T @ diff_unlabeled
+
+            diff_labeled = x_tilde - mu[j]
+            sigma_labeled =  (w_tilde[:, j][:, np.newaxis] * diff_labeled).T @ diff_labeled
+            sigma[j] = (sigma_unlabeled + alpha*sigma_labeled) / (np.sum(w[:, j]) + alpha*np.sum(w_tilde[:, j]))
         # (3) Compute the log-likelihood of the data to check for convergence.
         # Hint: Make sure to include alpha in your calculation of ll.
         # Hint: For debugging, recall part (a). We showed that ll should be monotonically increasing.
-        # *** END CODE HERE ***
+        prev_ll = ll
+        likelihoods = np.zeros(m)
+        for i in range(m):
+            temp = 0
+            for j in range(K):
+                temp += phi[j] * multivariate_gaussian(x[i:i+1], mu[j], sigma[j])[0]
+            likelihoods[i] = temp
 
+        # labeled contribution to log-likelihood
+        labeled_ll = 0
+        for j in range(K):
+            mask = (z.flatten() == j)
+            if np.sum(mask) > 0:
+                labeled_ll += np.sum(np.log(multivariate_gaussian(x_tilde[mask], mu[j], sigma[j])))
+
+        ll = np.sum(np.log(likelihoods)) + alpha * labeled_ll
+        # *** END CODE HERE ***
+        it+=1
+        print(it)
     return w
 
 
 # *** START CODE HERE ***
 # Helper functions
+def multivariate_gaussian(x,mu,sigma):
+        n= x.shape[1]
+        diff = x-mu
+        det_sigma=np.linalg.det(sigma)
+        inv_sigma = np.linalg.inv(sigma)
+        norm_const=1/np.sqrt((2*np.pi)**n*det_sigma)
+        exponent = -0.5 * np.sum(diff @ inv_sigma * diff,axis=1)
+        return norm_const * np.exp(exponent)
 # *** END CODE HERE ***
 
 
@@ -197,5 +280,5 @@ if __name__ == '__main__':
         # Once you've implemented the semi-supervised version,
         # uncomment the following line.
         # You do not need to add any other lines in this code block.
-        # main(with_supervision=True, trial_num=t)
+        # main(is_semi_supervised=True, trial_num=t)
         # *** END CODE HERE ***

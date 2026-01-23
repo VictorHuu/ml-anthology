@@ -1,0 +1,144 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{Lecture 11\&12 Introduction to Neural Networks}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+\maketitle
+\section{Deep Learning}
+\begin{enumerate}
+\item computational power
+\item data available
+\item algorithms
+\end{enumerate}
+Define an operation: \\
+a neuron = linear + activation (e.g. linear + sigmoid). \\
+Then model = architecture + parameter, which means how neurons are connected and what values they take.
+
+You don’t have to tell neurons too many things in the label, since they are robust enough and can learn the mapping from data by themselves, instead of hard rules.
+
+Softmax can be used to link all neurons together to make predictions, because each neuron output will affect the others:
+\[
+\frac{e^{z_3^{[1]}}}{\sum_{i=1}^n e^{z_3^{[i]}}}.
+\]
+After softmax, you will choose the maximum value and set it to 1, while others to 0, which forms the final prediction. So we can’t use schema like $[1,1,0]^T$, since softmax assumes only one class is correct and such label will confuse the learning, then it won’t predict well.
+
+This is called a softmax multi-class network, where neurons are dependent instead of independent. When one neuron increases, others will be suppressed automatically. Suppose that there are only given labels in the dataset, so even if there are few samples of some labels, the network can still learn and predict whether it belongs to these labels or not, based on relative probability.
+
+The loss function (considering that neurons affect each other) is:
+\[
+\mathcal{L}_{\mathrm{src}}
+= -\sum_{k=1}^{3} y_k \log \hat{y}_k
+\]
+This loss compares the predicted distribution with the true one-hot label. Since softmax couples all outputs, the error of one class will change the gradients of other classes as well.
+
+When it comes to linear regression problem,we should change the activation function to $\textbf{ReLU}$ since it's a nearly linear function. Therefore, the loss function should be changed to $OLS$.
+
+\begin{quote}
+\textbf{Q:} Why do we need hidden layer?
+
+\textbf{A:} Because in one layer we will know some immediate information such as the edges of an image.As the layer goes deep, the information will be of fine granularity.
+\end{quote}
+End-to-end learning: we don't know what intermediate information does the network need to learn,it learns them by itself.
+\section{Propagation equations}
+SGD updates the weights and bias after every data,while GD or BGD updates them after seeing the whole dataset.
+
+Define loss/cost function
+\[
+J(\hat {y},y)=\frac{1}{m}\sum_{i=1}^m L^{(i)}
+\]
+\[
+L^{(i)}=-[y^{(i)}\log{y^{(i)}}+(1-y^{(i)})\log{(1-y^{(i)})}]
+\]
+\subsection{Propagation Equation}
+\begin{enumerate}
+\item $z^{[1]}=w^{[1]}x+b^{[1]}$
+\item $a^{[1]}=\sigma (z^{[1]})$
+\item $z^{[2]}=w^{[2]}a^{[1]}+b^{[2]}$
+\item $a^{[2]}=\sigma(z^{[2]})$
+\item $z^{[3]}=w^{[3]}a^{[2]}+b^{[3]}$
+\item $\hat{y}=a^{[3]}=\sigma(z^{[3]})$
+\end{enumerate}
+Notice that $\sigma$ is an element-wise operation.
+\subsection{Backward Propagation}
+\begin{eqnarray*}
+\forall l=1,\cdots,3 w^{[l]}=w^{[l]}-\alpha \frac{\partial L}{\partial w^{[l]}}\\
+b^{[l]}=b^{[l]}-\alpha \frac{\partial y}{\partial b^{[l]}}
+\end{eqnarray*}
+Notice that $w[l]\in R^{n[l],n[l-1]}$,$b[l]\in R^{n[l],1}$,and the partial derivative item are of the same shape with that of the denominator.
+
+By the chain rule:
+\[
+\frac{\partial y}{\partial w^{[3]}}=\frac{\partial y}{\partial a^{[3]}}\frac{\partial a^{[3]}}{\partial z^{[3]}}\frac{\partial z^{[3]}}{\partial w^{[3]}}
+\]
+Notice that $\frac{\partial y}{\partial z^{[3]}}=\frac{\partial y}{\partial a^{[3]}}\frac{\partial a^{[3]}}{\partial z^{[3]}}$
+\[
+\frac{\partial y}{\partial w^{[2]}}=\frac{\partial y}{\partial z^{[3]}}\frac{\partial z^{[3]}}{\partial a^{[2]}}\frac{\partial a^{[2]}}{\partial z^{[2]}}\frac{\partial z^{[2]}}{\partial w^{[2]}}
+\]
+Similarly,since we have $\frac{\partial y}{\partial z^{[2]}}=\frac{\partial y}{\partial a^{[2]}}\frac{\partial a^{2]}}{\partial z^{[2]}}$
+\[
+\frac{\partial y}{\partial w^{[1]}}=\frac{\partial y}{\partial z^{[2]}}\frac{\partial z^{[2]}}{\partial a^{[1]}}\frac{\partial a^{[1]}}{\partial z^{[1]}}\frac{\partial z^{[1]}}{\partial w^{[1]}}
+\]
+\subsection{Induction of BP}
+\begin{eqnarray*}
+	J(\hat{y},y)=\frac{1}{m}\sum_{i=1}^m L^{(i)}(\hat{y},y)
+\end{eqnarray*}
+with
+\begin{eqnarray*}
+	 L^{(i)}=-[y^{(i)}\log{y^{(i)}}+(1-y^{(i)})\log{1-y^{(i)}} ]
+\end{eqnarray*}
+Update:
+$w^{[l]}=w^{[l]}-\alpha \frac{\partial L}{\partial w^{[l]}}$
+
+\begin{eqnarray*}
+	\frac{\partial L}{\partial w^{[3]}}\\
+	&=& -[y^{(i)}\frac{\partial}{\partial w^{[3]}}\log(\sigma(w^{[3]}a^{[2]}+b^{[3]}))+(1-y^{(i)})\frac{\partial}{\partial w^{[3]}} \log(1-\sigma(w^{[3]}a^{[2]}+b^{[3]}))]\\
+	&=& -[y^{(i)}\frac{\partial \sigma(w^{[3]}a^{[2]}+b^{[3]})}{\partial w^{[3]}} \frac{1}{\sigma(w^{[3]}a^{[2]}+b^{[3]})}-(1-y^{(i)})\frac{\partial \sigma(w^{[3]}a^{[2]}+b^{[3]})}{\partial w^{[3]}} \frac{1}{1-\sigma(w^{[3]}a^{[2]}+b^{[3]})}]\\
+	&=& -[y^{(i)}\frac{\partial (w^{[3]}a^{[2]}+b^{[3]})}{\partial w^{[3]}}(1-\sigma(w^{[3]}a^{[2]}+b^{[3]})) -(1-y^{(i)})\frac{\partial (w^{[3]}a^{[2]}+b^{[3]})}{\partial w^{[3]}} \sigma(w^{[3]}a^{[2]}+b^{[3]})]\\
+	&=& -[y^{(i)}{a^{[2]}}^T(1-\sigma(w^{[3]}a^{[2]}+b^{[3]}))-(1-y^{(i)}){a^{[2]}}^T\sigma(w^{[3]}a^{[2]}+b^{[3]})]\\
+	&=& (\sigma(w^{[3]}a^{[2]}+b^{[3]})-y^{(i)}){a^{[2]}}^T\\
+	&=& (a^{[3]}-y^{(i)}){a^{[2]}}^T
+\end{eqnarray*}
+Obviously, the result can be decomposed as 
+\begin{eqnarray*}
+	\frac{\partial L}{\partial w^{[3]}}=\frac{\partial L}{\partial z^{[3]}}\frac{\partial z^{[3]}}{\partial w^{[3]}}
+\end{eqnarray*}
+where $\frac{\partial z^{[3]}}{\partial w^{[3]}}={a^{[2]}}^T$ and $\frac{\partial L}{\partial z^{[3]}}=(a^{[3]}-y^{(i)})$
+Then
+\begin{eqnarray*}
+	\frac{\partial L}{\partial w^{[2]}}=\left({w^{[3]}}^T \odot a^{[2]}(1-a^{[2]})\right)(a^{[3]}-y){a^{[1]}}^T
+\end{eqnarray*}
+\section{Improving NNs}
+\begin{quote}
+	\textbf{Q:}Why do we need activation functions?
+	
+	\textbf{A:} Otherwise the NN just involves linear regression and the expressiveness will be undermined quite a lot
+\end{quote}
+\subsection{Exploding \& Vanishing Gradient}
+Suppose that the activation function is identity,then $\hat{y}=w^{[l]}w^{[l-1]}\cdots w^{[1]}x$. If all of $w^{[i]}$ are initialized as $W=\lambda E$ where $\lambda<1$, then the gradient will vanish soon;while it will explode if all of them are set to $w=\lambda E$ where $\lambda >1$ 
+
+Initialization schema
+\begin{enumerate}
+	\item $w^{[l]}=$ np.random.randn(shape)$\times \sqrt{\frac{1}{n^{[l-1]}}}$(if the activation is $sigmoid$)
+	\item $w^{[l]}=$ np.random.randn(shape)$\times \sqrt{\frac{2}{n^{[l-1]}}}$(if the activation is $ReLU$)
+	\item Xavier Initialization $W^{[l]}\sim \sqrt{\frac{1}{n^{[n-1]}}}$ for $tanh$
+	\item He $W^{[l]}\sim \sqrt{\frac{2}{n^{[n-1]}+n^{[n]}}}$ (but also applied to BP)
+\end{enumerate}
+Otherwise you will encounter the symmetric problem i.e. every neuron will learn the same thing.
+\subsection{Optimization}
+Batch GD will be more smooth than the mini-batch GD.Smaller batch is,the more stochastic and noise will be introduced. So the trade-off between speed and batch size needs to be considered.
+
+\subsection{GD + Momentum}
+If you take the average of update vector during the process,convergence to the optimal will be more fast. Because the momentum in  direction orthogonal to the one towards  optimal will be amortized.
+
+Then a new variable is introduced called velocity: 
+\begin{eqnarray*}
+	v=\beta v +(1-\beta) \frac{\partial L}{\partial w}\\
+	W=W-\alpha v\quad
+\end{eqnarray*}
+
+\end{document}

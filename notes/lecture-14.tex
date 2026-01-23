@@ -1,0 +1,65 @@
+\documentclass[]{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\title{Lecture 14 Expectation-Maximization Algorithms}
+\author{Yuntao Hu}
+
+\begin{document}
+
+\maketitle
+\section{k-nn}
+
+\section{Mixture of Gaussian}
+
+We wish to model the data by specifying a joint distribution
+\[
+p(x^{(i)}, z^{(i)}) = p(x^{(i)} \mid z^{(i)}) \, p(z^{(i)}).
+\]
+Here, $ z^{(i)} \sim {Multinomial}({\phi}) $, where
+$ \phi_j \ge 0 $, $ \sum_{j=1}^k \phi_j = 1$, and the parameter
+$ \phi_j $ gives $ p(z^{(i)} = j) $.
+Furthermore,
+
+\begin{eqnarray*}
+	&&x^{(i)} \mid z^{(i)} \\
+	&=& j \sim \mathcal{N}(\mu_j, \Sigma_j)
+\end{eqnarray*}
+We let $ k $ denote the number of values that the $ z^{(i)} $'s can take on.
+
+In M-step we have the parameters:
+\begin{eqnarray*}
+	&&\phi_j =\frac{1}{n}\sum_{i=1}^n w_j^{(i)}\\
+	&&\mu_j = \frac{\sum_{i=1}^nw_j^{(i)}x^{(i)}}{\sum_{i=1}^n w_j^{(i)}}\\
+	&&\Sigma_j =\frac{\sum_{i=1}^n w_j^{(i)}w_j^{(i)}(x^{(i)}-\mu_j)(x^{(i)}-\mu_j)^T}{\sum_{i=1}^n w_j^{(i)}}
+\end{eqnarray*}
+where $w_j^{(i)}$ can be seen as $\mathbf{E}[\mathbf{1}(x^{(i)}=j)]$
+
+Mixture of Gaussian gives a very rich family of models to fit the data.
+\subsection{Density Estimation Problem}
+Only observe x
+\[
+\arg \max_{\theta} l(\theta)
+\]
+
+The ELBO function has 2 properties:
+\begin{enumerate}
+	\item the inequality holds with equality at the point $\theta$
+	\item it's lower bound of the real function
+\end{enumerate}
+What the M step does is to take the estimated curve to find the maximum
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.8\textwidth]{images/p14-em.png}
+	\caption{green curve: the ELBO function at $\theta_{k}$;\quad$\theta_{k+1}=\arg \max_{\theta} ELBO_{k}(\theta)$}
+	\label{fig:p14em}
+\end{figure}
+\section{Other interpretation of ELBO}
+\begin{eqnarray*}
+	&&ELBO(x;Q,\theta)=\log p(x)-D_{KL}(Q||p_{z|x})=\log p(x)-\sum_{z} Q(z)\log\frac{Q(z)}{p(z|x;\theta)}\\
+	&=& \sum_{z} Q(z)\log \frac{p(z|x;\theta)p(x)}{Q(z)}\\
+	&=&	\sum_{z} Q(z)\log \frac{p(x,z;\theta)}{Q(z)}
+\end{eqnarray*}
+This forms shows that the maximizer of $ELBO(Q; \theta)$ over Q is obtained
+when $Q = p_{z|x}$
+\end{document}

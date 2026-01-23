@@ -1,0 +1,147 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{Lecture 10 Decision Trees and Ensemble Methods}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+\maketitle
+\section{Decision Trees}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/10-skiing.png}
+    \caption{Latitude and Months for skiing}
+    \label{fig:decision_tree}
+\end{figure}
+Q: How to chosee splits?
+
+A: Define $L(R)$: loss on $R$ Given $C$ classes,define $\hat{p_c}$ to be the proportion of examples in $R$ that are of class $C$
+\[
+L_{mis\_loss}=1-\max_c \hat{p_c}
+\]
+Accordingly,we define the following formula:
+\begin{eqnarray*}
+\min_{j,t}=L(R_p)-(L(R_1)+L(R_2))
+\end{eqnarray*}
+the 1-st term refers to the parent loss,while the latter refer to children loss.However,the 1-st loss doesn't matter.
+
+But the misclassification loss isn't the actual loss we use in this problem!
+
+Instead define cross-entropy loss:
+\[
+L_{cross}=-\sum_c \hat{p_c}\log{\hat{p_c}}
+\]
+Since cross entropy finction is strictly concave,more splits tend to lead to less loss,i.e. non-zero information gain.
+An uneven split tends to gain more.
+Besides cross-entropy,there's a gini loss $\sum_c \hat{p_c}(1-\hat{p_c})$.
+
+Likewise, we can define a regression tree.
+Predict $\hat{y_m}=\frac{\sum{i\in R_m}y_i}{|R_m|}$,and $L_{squared}=\frac{\sum_{i\in R_m}(y_i-\hat{y_m})^2}{|R_m|}$.
+
+We can discretize the variables in the above method:
+think about there are q categories,then there are $2^q$ splits.
+\subsection{Regularization of DTs}
+Because DTs tend to be over-fitting ,since it will leads to more information gain,so we need regularization to rectify the trend.
+\begin{description}
+    \item[\textbf{Stopping criteria}]
+    \item[a] min leaf size
+    \item[b] max depth
+    \item[c] max number of nodes
+    \item[d] min decrease in loss
+    \item[e] Pruning (misclassification with validation set)
+\end{description}
+\begin{quote}
+\textbf{Q:} Why do we use misclassification when pruning?
+
+\textbf{A:}
+
+Growing (Cross-Entropy): Used because it is sensitive. It rewards "purity" even if the majority label hasn't changed, providing the gradient necessary to keep splitting.
+
+Pruning (Misclassification): Used because it is the goal. We only care about final accuracy on the validation set. If a complex split doesn't reduce the actual error count, we prune it to favor the simpler model (Occam's Razor).
+\end{quote}
+\subsection{Runtime}
+$n$ examples,$f$ features,$d$ depth.
+Data matrix is of size $nf$.
+Test Time: $O(d)$
+Train time:each point is part of $O(d)$ node(since other nodes aren't involved along the path),cost of point at each node is O(f).
+
+The total cost is $O(nfd)$.
+\subsection{Downsides\&Goodsides}
+No additive structure:Even faced with a simple linear regression,you need to ask a lot of questions
+
+Pros:
+\begin{enumerate}
+\item[a] Easy to explain
+\item[b] Interpretable
+\item[c] Categorical vars
+\item[d] fast
+\end{enumerate}
+
+Cons:
+\begin{enumerate}
+\item[a] High variance
+\item[b] Bad at additive
+\item[c] Low predicitive accuracy
+\end{enumerate}
+\section{Ensemble Methods}
+Take $x_i$'s which are random variables that are independently identically distributed.
+\[
+Var(X_i)=\sigma^2,Var(\hat{X})=\frac{\sigma^2}{n}
+\]
+What if we drop independent assumption?So now $X_i$'s are i.d,$X$'s correlated by $P$.
+\[
+Var(\cap{X})=P\sigma^2+\frac{1-P}{n}\sigma^2
+\]
+
+Ways to ensemble
+\begin{enumerate}
+\item[I] different algorithms
+\item[II] different training sets
+\item[III] Bagging(RF)
+\item[IV] Boosting(Adaboost,XGBoost)
+\end{enumerate}
+\section{Bagging}
+Bootstrap Aggregation
+
+Have a true population P,then Training set $S\sim P$
+
+Assume $P=S$.Then we have Bootstrap samples $Z\sim S$ $n$ times.
+
+Bootstrap Samples $Z_1,\cdots,Z_m$.Train model $G_m$ on $Z_m$
+$G(m)=\frac{\sum_m G_m(x)}{M}$
+\subsection{Bias\&Variance Analysis}
+\[
+Var(\cap{X})=\rho\sigma^2+\frac{1-\rho}{n}\sigma^2
+\]
+
+Bootstrapping is driving down $\rho$,it does not actually cause overfitting.
+
+More $M$->less variance.
+\begin{quote}
+\textbf{Q:} Why Bootstrapping drives down $\rho$?
+
+\textbf{A:} It introduces data diversity,even a small variety among samples lead to different DTs since DT is a high-variance learner.
+
+\textbf{Q:} Can you define a bound to define how much the $\rho$ lower by?
+
+\textbf{A:} Limitation:Your bootstrap sample are still highly-correlated.
+\end{quote}
+
+Bootstrapping is slightly increasing the biases,and thus every sub-model becomes less complex.
+\section{Random Forest}
+At each split,consider only a fraction of your total features.
+
+It decreases $\rho$.
+\section{Boosting}
+Decrease bias,additive.
+
+Determine for classifier for $G_m$a weight $\alpha_m$ proportional $\log \frac{1-{err}_m}{{err}_m}$
+
+\[
+G(x)=\sum_m \alpha_m G_m
+\]
+Each $G_m$ is trained on a re-weightred training set.
+\end{document}

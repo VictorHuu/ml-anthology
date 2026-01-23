@@ -1,5 +1,6 @@
 import json
-
+import util
+import numpy as np
 def example_weights():
     """This is an example function that returns weights.
     Use this function as a template for optimal_step_weights and optimal_sigmoid_weights.
@@ -40,6 +41,20 @@ def optimal_step_weights():
     w = example_weights()
 
     # *** START CODE HERE ***
+    w['hidden_layer_0_1'] = -0.5
+    w['hidden_layer_1_1'] = 1
+    w['hidden_layer_2_1'] = 0
+    w['hidden_layer_0_2'] = -4
+    w['hidden_layer_1_2'] = 1
+    w['hidden_layer_2_2'] = 1
+    w['hidden_layer_0_3'] = -0.5
+    w['hidden_layer_1_3'] = 0
+    w['hidden_layer_2_3'] = 1
+
+    w['output_layer_0'] = -1.5
+    w['output_layer_1'] = -1
+    w['output_layer_2'] = 1
+    w['output_layer_3'] = -1
     # *** END CODE HERE ***
 
     return w
@@ -59,6 +74,20 @@ def optimal_linear_weights():
     w = example_weights()
 
     # *** START CODE HERE ***
+    # w['hidden_layer_0_1'] = -0.5
+    # w['hidden_layer_1_1'] = 1
+    # w['hidden_layer_2_1'] = 0
+    # w['hidden_layer_0_2'] = -4
+    # w['hidden_layer_1_2'] = 1
+    # w['hidden_layer_2_2'] = 1
+    # w['hidden_layer_0_3'] = -0.5
+    # w['hidden_layer_1_3'] = 0
+    # w['hidden_layer_2_3'] = 1
+
+    # w['output_layer_0'] = 
+    # w['output_layer_1'] = 1
+    # w['output_layer_2'] = -1
+    # w['output_layer_3'] = 1
     # *** END CODE HERE ***
 
     return w
@@ -69,7 +98,25 @@ if __name__ == "__main__":
     with open('output/step_weights', 'w') as f:
         json.dump(step_weights, f)
 
-    linear_weights = optimal_linear_weights()
+    train_x, train_y = util.load_csv('../data/ds3_train.csv',add_intercept=True)
+    w_1=np.zeros(3)
+    w_1[0]=step_weights['hidden_layer_0_1']
+    w_1[1]=step_weights['hidden_layer_1_1']
+    w_1[2]=step_weights['hidden_layer_2_1']
+    w_2=np.zeros(3)
+    w_2[0]=step_weights['hidden_layer_0_2']
+    w_2[1]=step_weights['hidden_layer_1_2']
+    w_2[2]=step_weights['hidden_layer_2_2']
+    w_3=np.zeros(3)
+    w_3[0]=step_weights['hidden_layer_0_3']
+    w_3[1]=step_weights['hidden_layer_1_3']
+    w_3[2]=step_weights['hidden_layer_2_3']
+    print(train_x.shape)
+    hat_y1= w_1 @ train_x.T
+    hat_y2= w_2 @ train_x.T
+    hat_y3= w_3 @ train_x.T
+    print(hat_y1-hat_y2+hat_y3)
+    # linear_weights = optimal_linear_weights()
 
-    with open('output/linear_weights', 'w') as f:
-        json.dump(linear_weights, f)
+    # with open('output/linear_weights', 'w') as f:
+    #     json.dump(linear_weights, f)
