@@ -13,6 +13,8 @@ This repository is organized as a monorepo for systematic study and practice in 
 
 - **CS224N** – Implementation-focused course on deep learning for natural language processing.
 
+  Course materials: [CS224N Syllabus](https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1246/index.html#schedule)
+
 - **CS324** – Paper reading, critical discussion, and research-oriented analysis.
 
 ## Webinars & Podcasts
