@@ -1,0 +1,100 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{fancyhdr} 
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\setlength{\headheight}{14pt} 
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{CS224N }
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\title{Assignment 2 Word2Vec and Dependency Parsing}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+	
+	\maketitle
+	\thispagestyle{plain}
+	\section{Understanding word2vec}
+	\begin{enumerate}
+		\item[a]
+		According to the definition of one-hot vector:
+		\begin{eqnarray*}
+			y_w = 
+			\begin{cases}
+				1 & \text{if } x = o \\
+				0 & \text{if } x \ne o
+			\end{cases}
+		\end{eqnarray*}
+		Plug the above def into the formula of cross-entropy,we have:
+		\begin{eqnarray*}
+			&&-\sum_{w\in Vocab}y_w\log{\hat{y_w}}\\
+			&=&-\log {\hat{y_o}}
+		\end{eqnarray*}
+		\item[b]
+		\begin{enumerate}
+			\item[I] \begin{eqnarray*}
+				&&\frac{\partial J_{\text{naive-softmax}}(v_c,o,U)}{\partial v_c}\\
+				&=&\frac{\partial -\log P(O=o|C=c)}{\partial v_c}\\
+				&=&\frac{\partial \left( -u_o^Tv_c+\log \sum_{w\in{Vocab}}\exp(u_w^Tv_c)\right)}{\partial v_c}\\
+				&=& -u_o+\sum_{w\in{Vocab}} \frac{\exp(u_w^T v_c)}{\sum_{w\prime\in{Vocab}}\exp(u_w\prime^Tv_c)}u_w\\
+				&=& -u_o+\sum_{w\in{Vocab}} \hat{y_w}u_w\\
+				&=&\sum_{w\in{Vocab}} \hat{y_w}u_w-\sum_{w\in{Vocab}} y_w u_w\\
+				&=& U(\hat{y}-y)
+			\end{eqnarray*}
+			\item[II] \begin{eqnarray*}
+				y=\hat{y}
+			\end{eqnarray*}
+			\item[III] When it comes to the gradient descent,the term $\hat{y}$ will be subtracted,so the $v_c$ will move against the predicted item while $-y$ means that it will move towards the real item.
+		\end{enumerate}
+		
+		
+		\item[c]
+		L2 normalization removes magnitude information, so it hurts tasks where magnitudes encode important differences. It does not hurt tasks that only rely on the relative direction of vectors.
+		\item[d]
+		$\begin{pmatrix}
+			\frac{\partial J(v_c,o,U)}{\partial u_1}&\frac{\partial J(v_c,o,U)}{\partial u_2}&\cdot&
+			\frac{\partial J(v_c,o,U)}{\partial u_{|vocab|}}
+		\end{pmatrix}$
+		\item[e]
+		Assume that $i=o$,then we have
+		\begin{eqnarray*}
+			&&\frac{\partial{J(v_c,o,U)}}{\partial u_i}\\
+			&=&\frac{\partial \left( -u_o^Tv_c+\log \sum_{w\in{Vocab}}\exp(u_w^Tv_c)\right)}{\partial u_i}\\
+			&=&-v_c+\frac{\exp{(u_i^Tv_c)}}{\sum_{w\in{Vocab}}\exp(u_w^Tv_c)}v_c\\
+			&=&(\hat{y_o}-1)v_c
+		\end{eqnarray*}
+		otherwise,
+		\begin{eqnarray*}
+			&&\frac{\partial{J(v_c,o,U)}}{\partial u_i}\\
+			&=&\frac{\partial \left( -u_o^Tv_c+\log \sum_{w\in{Vocab}}\exp(u_w^Tv_c)\right)}{\partial u_i}\\
+			&=&\frac{\exp{(u_i^Tv_c)}}{\sum_{w\in{Vocab}}\exp(u_w^Tv_c)}v_c\\
+			&=&\hat{y_i}v_c
+		\end{eqnarray*}
+		Final Answer:
+		$\begin{pmatrix}
+			\hat{y_1}v_c&\hat{y_2}v_c&(\hat{y_o}-1)v_c&\cdot&\hat{y_n}v_c
+		\end{pmatrix}$
+		\item[f]
+		\begin{eqnarray*}
+			f\prime(x) =
+			\begin{cases}
+				1 & \text{if } x > 0, \\
+				\alpha & \text{if } x < 0.
+			\end{cases}
+		\end{eqnarray*}
+		\item[g]
+		\begin{eqnarray*}
+			&&\sigma\prime(x) =\frac{e^x(e^x+1)-e^{2x}}{(e^x+1)^2}\\
+			&=&\frac{e^x}{(e^x+1)^2}\\
+			&=&\sigma(x)(1-\sigma(x))
+		\end{eqnarray*}
+	\end{enumerate}
+\end{document}
