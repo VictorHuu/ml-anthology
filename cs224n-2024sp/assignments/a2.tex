@@ -97,4 +97,27 @@
 			&=&\sigma(x)(1-\sigma(x))
 		\end{eqnarray*}
 	\end{enumerate}
+	\section{Neural Networks Optimization}
+	\begin{enumerate}
+		\item[a] 
+		\begin{enumerate}
+			\item[I] Because of the momentum, which preserves the gradients in the past partially,thus leading to the low variance.
+			This low variance means the stability of updates for gradients and resistance to noise while maintaining inertia.It boosts the convergence and prevent it from oscillation.
+			\item[II] The model parameters whose gradients are of lower magnitudes.This is where the 'adaptive' in Adam comes from. When the magnitude is high,the update will be lower which prevents from oscillation.Otherwise,the update will be more quickly,which prevents from stagnation.
+		\end{enumerate}
+		\item[b] 
+		\begin{enumerate}
+			\item[I]
+			\begin{eqnarray*} 
+				&&\mathcal{E}_{p_{drop}}[h_{drop}]_i\\
+				&=&\gamma (1-p_{drop}) h_i\\
+				&=& h_i
+			\end{eqnarray*}
+			Compare both sides of the equality ,we have $\gamma=\frac{1}{1-p_{drop}}$
+			\item[II]
+			Dropout is applied to prevent overfitting and co-adaptation, simulating an ensemble of networks.
+			
+			When it comes to evaluation,dropout is turned off, using all neurons and scaling weights to $pW$ to get deterministic predictions with the full network capacity.This ensures that the expected output of these 2 stages are the same.
+		\end{enumerate}
+	\end{enumerate}
 \end{document}
