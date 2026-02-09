@@ -5,6 +5,8 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{array}
+\usepackage{booktabs}
 \setlength{\headheight}{14pt} 
 
 \pagestyle{fancy}
@@ -120,4 +122,65 @@
 			When it comes to evaluation,dropout is turned off, using all neurons and scaling weights to $pW$ to get deterministic predictions with the full network capacity.This ensures that the expected output of these 2 stages are the same.
 		\end{enumerate}
 	\end{enumerate}
+	\section{Neural Transition-Based Dependency Parsing}
+	\begin{enumerate}
+		\item[a]
+		\begin{table}[htbp]
+			\centering
+			\caption{A dep parser}
+			\label{tab:example}
+			\setlength{\tabcolsep}{4pt}
+			\renewcommand{\arraystretch}{1.2}
+			\begin{tabular}{>{\ttfamily}p{4cm} >{\ttfamily}p{5cm} c c}
+				\toprule
+				Stack & Buffer & New dependency & Transition \\
+				\midrule
+				{[Root, presented, my]} &
+				{[findings, at, the, NLP, conference]} &
+				& SHIFT \\
+				{[Root, presented, my, findings]} &
+				{[at, the, NLP, conference]} &
+				& SHIFT \\
+				{[Root, presented,findings]} &
+				{[at, the, NLP, conference]} &{\texttt{findings->my}}
+				& LEFT-ARC \\
+				{[Root, presented]} &
+				{[at, the, NLP, conference]} &{\texttt{presented->findings}}
+				& RIGHT-ARC \\
+				{[Root, presented,at]} &
+				{[the, NLP, conference]} &
+				& SHIFT \\
+				{[Root, presented,at,the]} &
+				{[NLP, conference]} &
+				& SHIFT \\
+				{[Root, presented,at,the,NLP]} &
+				{[conference]} &
+				& SHIFT \\
+				{[Root, presented,at,the,NLP,conference]} &
+				{[]} &
+				& SHIFT \\
+				{[Root, presented,at,the,conference]} &
+				{[]} &{\texttt{conference->NLP}}
+				& LEFT-ARC \\
+				{[Root, presented,at,conference]} &
+				{[]} &{\texttt{conference->the}}
+				& LEFT-ARC \\
+				{[Root, presented,conference]} &
+				{[]} &{\texttt{conference->at}}
+				& LEFT-ARC \\
+				{[Root, presented]} &
+				{[]} &{\texttt{presented->conference}}
+				& RIGHT-ARC \\
+				{[Root]} &
+				{[]} &{\texttt{Root->presented}}
+				& RIGHT-ARC \\
+				\bottomrule
+			\end{tabular}
+		\end{table}
+		\item[b] 2n steps. Because for every word,it needs 2 steps namely SHIFT,ARC to be pushed into the stack and then be popped out.
+		\item[c] 
+	\end{enumerate}
+	
+	
+	
 \end{document}
