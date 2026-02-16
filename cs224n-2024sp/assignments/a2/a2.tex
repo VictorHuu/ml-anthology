@@ -1,0 +1,236 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{fancyhdr} 
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{array}
+\usepackage{booktabs}
+\setlength{\headheight}{14pt} 
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{CS224N }
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\title{Assignment 2 Word2Vec and Dependency Parsing}
+\author{Yuntao Hu}
+\date{}
+
+\begin{document}
+	
+	\maketitle
+	\thispagestyle{plain}
+	\section{Understanding word2vec}
+	\begin{enumerate}
+		\item[a]
+		According to the definition of one-hot vector:
+		\begin{eqnarray*}
+			y_w = 
+			\begin{cases}
+				1 & \text{if } x = o \\
+				0 & \text{if } x \ne o
+			\end{cases}
+		\end{eqnarray*}
+		Plug the above def into the formula of cross-entropy,we have:
+		\begin{eqnarray*}
+			&&-\sum_{w\in Vocab}y_w\log{\hat{y_w}}\\
+			&=&-\log {\hat{y_o}}
+		\end{eqnarray*}
+		\item[b]
+		\begin{enumerate}
+			\item[I] \begin{eqnarray*}
+				&&\frac{\partial J_{\text{naive-softmax}}(v_c,o,U)}{\partial v_c}\\
+				&=&\frac{\partial -\log P(O=o|C=c)}{\partial v_c}\\
+				&=&\frac{\partial \left( -u_o^Tv_c+\log \sum_{w\in{Vocab}}\exp(u_w^Tv_c)\right)}{\partial v_c}\\
+				&=& -u_o+\sum_{w\in{Vocab}} \frac{\exp(u_w^T v_c)}{\sum_{w\prime\in{Vocab}}\exp(u_w\prime^Tv_c)}u_w\\
+				&=& -u_o+\sum_{w\in{Vocab}} \hat{y_w}u_w\\
+				&=&\sum_{w\in{Vocab}} \hat{y_w}u_w-\sum_{w\in{Vocab}} y_w u_w\\
+				&=& U(\hat{y}-y)
+			\end{eqnarray*}
+			\item[II] \begin{eqnarray*}
+				y=\hat{y}
+			\end{eqnarray*}
+			\item[III] When it comes to the gradient descent,the term $\hat{y}$ will be subtracted,so the $v_c$ will move against the predicted item while $-y$ means that it will move towards the real item.
+		\end{enumerate}
+		
+		
+		\item[c]
+		L2 normalization removes magnitude information, so it hurts tasks where magnitudes encode important differences. It does not hurt tasks that only rely on the relative direction of vectors.
+		\item[d]
+		$\begin{pmatrix}
+			\frac{\partial J(v_c,o,U)}{\partial u_1}&\frac{\partial J(v_c,o,U)}{\partial u_2}&\cdot&
+			\frac{\partial J(v_c,o,U)}{\partial u_{|vocab|}}
+		\end{pmatrix}$
+		\item[e]
+		Assume that $i=o$,then we have
+		\begin{eqnarray*}
+			&&\frac{\partial{J(v_c,o,U)}}{\partial u_i}\\
+			&=&\frac{\partial \left( -u_o^Tv_c+\log \sum_{w\in{Vocab}}\exp(u_w^Tv_c)\right)}{\partial u_i}\\
+			&=&-v_c+\frac{\exp{(u_i^Tv_c)}}{\sum_{w\in{Vocab}}\exp(u_w^Tv_c)}v_c\\
+			&=&(\hat{y_o}-1)v_c
+		\end{eqnarray*}
+		otherwise,
+		\begin{eqnarray*}
+			&&\frac{\partial{J(v_c,o,U)}}{\partial u_i}\\
+			&=&\frac{\partial \left( -u_o^Tv_c+\log \sum_{w\in{Vocab}}\exp(u_w^Tv_c)\right)}{\partial u_i}\\
+			&=&\frac{\exp{(u_i^Tv_c)}}{\sum_{w\in{Vocab}}\exp(u_w^Tv_c)}v_c\\
+			&=&\hat{y_i}v_c
+		\end{eqnarray*}
+		Final Answer:
+		$\begin{pmatrix}
+			\hat{y_1}v_c&\hat{y_2}v_c&(\hat{y_o}-1)v_c&\cdot&\hat{y_n}v_c
+		\end{pmatrix}$
+		\item[f]
+		\begin{eqnarray*}
+			f\prime(x) =
+			\begin{cases}
+				1 & \text{if } x > 0, \\
+				\alpha & \text{if } x < 0.
+			\end{cases}
+		\end{eqnarray*}
+		\item[g]
+		\begin{eqnarray*}
+			&&\sigma\prime(x) =\frac{e^x(e^x+1)-e^{2x}}{(e^x+1)^2}\\
+			&=&\frac{e^x}{(e^x+1)^2}\\
+			&=&\sigma(x)(1-\sigma(x))
+		\end{eqnarray*}
+	\end{enumerate}
+	\section{Neural Networks Optimization}
+	\begin{enumerate}
+		\item[a] 
+		\begin{enumerate}
+			\item[I] Because of the momentum, which preserves the gradients in the past partially,thus leading to the low variance.
+			This low variance means the stability of updates for gradients and resistance to noise while maintaining inertia.It boosts the convergence and prevent it from oscillation.
+			\item[II] The model parameters whose gradients are of lower magnitudes.This is where the 'adaptive' in Adam comes from. When the magnitude is high,the update will be lower which prevents from oscillation.Otherwise,the update will be more quickly,which prevents from stagnation.
+		\end{enumerate}
+		\item[b] 
+		\begin{enumerate}
+			\item[I]
+			\begin{eqnarray*} 
+				&&\mathcal{E}_{p_{drop}}[h_{drop}]_i\\
+				&=&\gamma (1-p_{drop}) h_i\\
+				&=& h_i
+			\end{eqnarray*}
+			Compare both sides of the equality ,we have $\gamma=\frac{1}{1-p_{drop}}$
+			\item[II]
+			Dropout is applied to prevent overfitting and co-adaptation, simulating an ensemble of networks.
+			
+			When it comes to evaluation,dropout is turned off, using all neurons and scaling weights to $pW$ to get deterministic predictions with the full network capacity.This ensures that the expected output of these 2 stages are the same.
+		\end{enumerate}
+	\end{enumerate}
+	\section{Neural Transition-Based Dependency Parsing}
+	\begin{enumerate}
+		\item[a]
+		\begin{table}[htbp]
+			\centering
+			\caption{A dep parser}
+			\label{tab:example}
+			\setlength{\tabcolsep}{4pt}
+			\renewcommand{\arraystretch}{1.2}
+			\begin{tabular}{>{\ttfamily}p{4cm} >{\ttfamily}p{5cm} c c}
+				\toprule
+				Stack & Buffer & New dependency & Transition \\
+				\midrule
+				{[Root, presented, my]} &
+				{[findings, at, the, NLP, conference]} &
+				& SHIFT \\
+				{[Root, presented, my, findings]} &
+				{[at, the, NLP, conference]} &
+				& SHIFT \\
+				{[Root, presented,findings]} &
+				{[at, the, NLP, conference]} &{\texttt{findings->my}}
+				& LEFT-ARC \\
+				{[Root, presented]} &
+				{[at, the, NLP, conference]} &{\texttt{presented->findings}}
+				& RIGHT-ARC \\
+				{[Root, presented,at]} &
+				{[the, NLP, conference]} &
+				& SHIFT \\
+				{[Root, presented,at,the]} &
+				{[NLP, conference]} &
+				& SHIFT \\
+				{[Root, presented,at,the,NLP]} &
+				{[conference]} &
+				& SHIFT \\
+				{[Root, presented,at,the,NLP,conference]} &
+				{[]} &
+				& SHIFT \\
+				{[Root, presented,at,the,conference]} &
+				{[]} &{\texttt{conference->NLP}}
+				& LEFT-ARC \\
+				{[Root, presented,at,conference]} &
+				{[]} &{\texttt{conference->the}}
+				& LEFT-ARC \\
+				{[Root, presented,conference]} &
+				{[]} &{\texttt{conference->at}}
+				& LEFT-ARC \\
+				{[Root, presented]} &
+				{[]} &{\texttt{presented->conference}}
+				& RIGHT-ARC \\
+				{[Root]} &
+				{[]} &{\texttt{Root->presented}}
+				& RIGHT-ARC \\
+				\bottomrule
+			\end{tabular}
+		\end{table}
+		\item[b] 2n steps. Because for every word,it needs 2 steps namely SHIFT,ARC to be pushed into the stack and then be popped out.
+		\item[e] 
+		\begin{enumerate}
+			\item[i]Let $z=xW+b $,$D=\textbf{diag}(\mathbf{1}_{z_1>0},\mathbf{1}_{z_2>0},\cdot,\mathbf{1}_{z_n>0})$
+			Thus,$\frac{\partial h}{\partial x}=DW^T$ where 
+			$\frac{\partial h_i}{\partial x_j}=D_{ii}W_{ji}$
+			\item[ii]
+			
+			Since the true label is \(c\), we have \(y_c = 1\) and \(y_j = 0\) for \(j \neq c\), hence
+			\[
+			\mathrm{CE}(y,\hat{y}) = -\log \hat{y}_c
+			\]
+			
+			Using the chain rule,
+			\[
+			\frac{\partial \mathrm{CE}}{\partial l_i}
+			=
+			\sum_{j=1}^3
+			\frac{\partial \mathrm{CE}}{\partial \hat{y}_j}
+			\frac{\partial \hat{y}_j}{\partial l_i}
+			\]
+			
+			where
+			\[
+			\frac{\partial \mathrm{CE}}{\partial \hat{y}_j}
+			=
+			-\frac{y_j}{\hat{y}_j},
+			\qquad
+			\frac{\partial \hat{y}_j}{\partial l_i}
+			=
+			\hat{y}_j(\delta_{ij} - \hat{y}_i)
+			\]
+			
+			Substituting the above expressions, we obtain
+			\[
+			\frac{\partial \mathrm{CE}}{\partial l_i}
+			=
+			\hat{y}_i - y_i
+			=
+			\begin{cases}
+				\hat{y}_c - 1, & i = c \\
+				\hat{y}_i, & i \neq c
+			\end{cases}
+			\]
+			\item[iii]
+			Epoch 10 out of 10
+
+  				- dev UAS: 88.91
+
+				- test UAS: 89.23
+		\end{enumerate}
+		
+	\end{enumerate}
+	
+	
+	
+\end{document}
